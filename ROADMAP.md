@@ -11,7 +11,7 @@ FinRAG answers questions about SEC filings (10-K, 10-Q, 8-K) and earnings call t
 | Day | Phase | Deliverable | Key Concept Unlocked | Status |
 |-----|-------|-------------|---------------------|--------|
 | 1 | Foundation | Project scaffold, env setup, EDGAR ingestion pipeline | SEC EDGAR API, structured data ingestion, environment isolation | ✅ Done |
-| 2 | Foundation | Section-aware chunker with metadata attachment | Section-boundary chunking, metadata-enriched chunks | ⬜ |
+| 2 | Foundation | Section-aware chunker with metadata attachment | Section-boundary chunking, metadata-enriched chunks | ✅ Done |
 | 3 | Foundation | ChromaDB vector store + embedding pipeline | Vector store design, embedding model selection | ⬜ |
 | 4 | Retrieval | BM25 keyword index + basic retrieval harness | Sparse retrieval, inverted indices, term frequency | ⬜ |
 | 5 | Retrieval | Hybrid retrieval with Reciprocal Rank Fusion | Fusion strategies, complementary retrieval signals | ⬜ |
