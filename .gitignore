@@ -38,3 +38,9 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Internal docs (local-only, not for repo)
+RULES.md
+ROADMAP.md
+DEBT_LEDGER.md
+CONTRIBUTING.md
