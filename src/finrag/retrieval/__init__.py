@@ -1,1 +1,1 @@
-"""Retrieval package for sparse and dense search."""
+"""Retrieval package for sparse, dense, and hybrid search."""
