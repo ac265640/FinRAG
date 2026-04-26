@@ -104,6 +104,17 @@ class GraphState(TypedDict, total=False):
     is_valid: bool
     validation_errors: list[str]
 
+    # --- Input Guardrails ---
+    input_guard_blocked: bool
+    input_guard_reason: str
+    input_guard_warnings: list[str]
+
+    # --- Output Guardrails ---
+    output_guard_blocked: bool
+    output_guard_redactions: int
+    output_guard_disclaimer: bool
+    output_guard_warnings: list[str]
+
     # --- Control ---
     error: str
     step_count: int

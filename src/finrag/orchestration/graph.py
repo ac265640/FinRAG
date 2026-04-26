@@ -1,13 +1,14 @@
 """LangGraph state machine for the FinRAG RAG pipeline.
 
 Assembles individual nodes into a compiled graph with conditional
-routing. The graph structure is:
+routing and guardrails. The graph structure is:
 
-    START → route_query ──→ retrieve → rerank → generate → validate → END
-                        │                              ↑
-                        ├→ calculate ─────────────────→┘
-                        │                              (via retrieve → rerank)
-                        └→ decline ──────────────────────→ END
+    START → input_guard ──→ route_query ──→ retrieve → rerank → generate → output_guard → validate → END
+                 │                     │                              ↑
+                 │                     ├→ calculate ─────────────────→┘
+                 │                     │                    (via retrieve → rerank)
+                 │                     └→ decline ──────────────────────→ END
+                 └→ (blocked) ─────────────────────────────────────────→ END
 
 Design decisions:
 - Functional node wrappers: LangGraph nodes are plain callables.
@@ -19,6 +20,9 @@ Design decisions:
 - Calculate shares retrieve → rerank path: calculation queries still
   need context from filings. They go through retrieval first, then
   the calculate node extracts numbers.
+- Guardrails sandwich: input_guard runs BEFORE routing (catches bad
+  queries before any compute). output_guard runs AFTER generation
+  (scrubs PII, adds disclaimers, checks for advice).
 - Single compiled graph instance: compile() is expensive (~50ms).
   Build once, invoke many times.
 - Step count guard in validate: prevents infinite loops if the graph
@@ -30,6 +34,8 @@ from functools import partial
 import structlog
 from langgraph.graph import END, StateGraph
 
+from finrag.guardrails.pipeline import guard_input, guard_output, is_input_blocked
+from finrag.orchestration.generator import RAGGenerator
 from finrag.orchestration.nodes import (
     calculate,
     decline,
@@ -55,18 +61,21 @@ logger = structlog.get_logger(__name__)
 def build_rag_graph(
     hybrid_retriever: HybridRetriever,
     reranker: CrossEncoderReranker,
+    rag_generator: RAGGenerator | None = None,
 ) -> StateGraph:
     """Build the RAG pipeline as a LangGraph state machine.
 
-    Constructs the full graph with nodes, edges, and conditional
-    routing. Returns an uncompiled StateGraph that can be compiled
-    with .compile() for execution.
+    Constructs the full graph with guardrails, nodes, edges, and
+    conditional routing. Returns an uncompiled StateGraph that can
+    be compiled with .compile() for execution.
 
     Args:
         hybrid_retriever: Initialized HybridRetriever for the
             retrieve node.
         reranker: Initialized CrossEncoderReranker for the
             rerank node.
+        rag_generator: Optional RAGGenerator for LLM generation.
+            If None, generate/calculate nodes use stub behavior.
 
     Returns:
         Uncompiled StateGraph ready for .compile().
@@ -78,19 +87,33 @@ def build_rag_graph(
     # while providing runtime dependencies.
     retrieve_node = partial(retrieve, hybrid_retriever=hybrid_retriever)
     rerank_node = partial(rerank, reranker=reranker)
+    generate_node = partial(generate, rag_generator=rag_generator)
+    calculate_node = partial(calculate, rag_generator=rag_generator)
 
     # --- Add nodes ---
+    graph.add_node("input_guard", guard_input)
     graph.add_node("route_query", route_query)
     graph.add_node("retrieve", retrieve_node)
     graph.add_node("rerank", rerank_node)
-    graph.add_node("generate", generate)
-    graph.add_node("calculate", calculate)
+    graph.add_node("generate", generate_node)
+    graph.add_node("calculate", calculate_node)
+    graph.add_node("output_guard", guard_output)
     graph.add_node("validate", validate)
     graph.add_node("decline", decline)
     graph.add_node("handle_error", handle_error)
 
-    # --- Set entry point ---
-    graph.set_entry_point("route_query")
+    # --- Set entry point: input guard runs first ---
+    graph.set_entry_point("input_guard")
+
+    # --- Conditional edge: input guard → route or block ---
+    graph.add_conditional_edges(
+        "input_guard",
+        is_input_blocked,
+        {
+            "allowed": "route_query",
+            "blocked": END,
+        },
+    )
 
     # --- Conditional routing from router ---
     # After route_query, branch based on the 'route' field.
@@ -119,16 +142,23 @@ def build_rag_graph(
         },
     )
 
-    # --- Post-generation: validate ---
-    graph.add_edge("generate", "validate")
-    graph.add_edge("calculate", "validate")
+    # --- Post-generation: output guard then validate ---
+    graph.add_edge("generate", "output_guard")
+    graph.add_edge("calculate", "output_guard")
+    graph.add_edge("output_guard", "validate")
 
     # --- Terminal edges ---
     graph.add_edge("validate", END)
     graph.add_edge("decline", END)
     graph.add_edge("handle_error", END)
 
-    logger.info("rag_graph_built", nodes=8, has_conditional_routing=True)
+    logger.info(
+        "rag_graph_built",
+        nodes=10,
+        has_input_guard=True,
+        has_output_guard=True,
+        has_conditional_routing=True,
+    )
 
     return graph
 
@@ -136,6 +166,7 @@ def build_rag_graph(
 def compile_rag_graph(
     hybrid_retriever: HybridRetriever,
     reranker: CrossEncoderReranker,
+    rag_generator: RAGGenerator | None = None,
 ) -> object:
     """Build and compile the RAG graph for execution.
 
@@ -145,11 +176,12 @@ def compile_rag_graph(
     Args:
         hybrid_retriever: Initialized HybridRetriever.
         reranker: Initialized CrossEncoderReranker.
+        rag_generator: Optional RAGGenerator for LLM generation.
 
     Returns:
         Compiled LangGraph runnable.
     """
-    graph = build_rag_graph(hybrid_retriever, reranker)
+    graph = build_rag_graph(hybrid_retriever, reranker, rag_generator)
     compiled = graph.compile()
 
     logger.info("rag_graph_compiled")
@@ -161,7 +193,7 @@ def invoke_pipeline(
     query: str,
     metadata_filter: dict | None = None,
     conversation_history: list[dict] | None = None,
-    max_steps: int = 10,
+    max_steps: int = 15,
 ) -> dict:
     """Invoke the compiled RAG pipeline with a query.
 
@@ -205,6 +237,8 @@ def invoke_pipeline(
         step_count=result.get("step_count", 0),
         has_answer=bool(result.get("answer", "")),
         num_citations=len(result.get("citations", [])),
+        input_blocked=result.get("input_guard_blocked", False),
+        output_blocked=result.get("output_guard_blocked", False),
     )
 
     return result

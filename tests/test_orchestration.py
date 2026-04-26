@@ -315,8 +315,8 @@ class TestGenerateNode:
 class TestCalculateNode:
     """Tests for the calculate stub node."""
 
-    def test_calculate_returns_stub(self) -> None:
-        """Calculate produces stub response."""
+    def test_calculate_empty_chunks_returns_error(self) -> None:
+        """Calculate with no chunks returns error."""
         state = {
             "query": "Compare revenue to expenses",
             "reranked_chunks": [],
@@ -324,8 +324,8 @@ class TestCalculateNode:
         }
         result = calculate(state)
 
-        assert "[STUB" in result["answer"]
-        assert "numerical computation" in result["answer"]
+        assert result["answer"] == ""
+        assert "No context" in result["error"]
 
 
 class TestValidateNode:

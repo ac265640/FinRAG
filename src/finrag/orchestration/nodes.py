@@ -7,9 +7,9 @@ dependencies, no side effects beyond logging.
 Node responsibilities:
 - retrieve: Run hybrid retrieval (BM25 + vector + RRF)
 - rerank: Apply cross-encoder reranking to retrieved chunks
-- generate: Generate answer from reranked context (stub Day 7)
-- calculate: Extract numbers and compute comparisons (stub Day 7)
-- validate: Check answer quality and citation presence
+- generate: LLM generation with citation enforcement (Day 8)
+- calculate: Numerical computation via LLM with function calling
+- validate: Check answer quality, citations, enforcement results
 - decline: Produce a polite refusal for out-of-scope queries
 - handle_error: Graceful error handling for pipeline failures
 
@@ -17,20 +17,16 @@ Design decisions:
 - Each node catches its own exceptions and writes to state['error']
   rather than crashing the graph. This lets the validate node
   produce a user-friendly error message.
-- generate and calculate are stubs until Day 8 (LLM integration).
-  They return placeholder text so the graph is fully testable now.
+- generate uses RAGGenerator with CitationEnforcer for grounded
+  answers. Retries once with stricter prompt on enforcement failure.
 - Nodes increment step_count for the loop guard.
 - Max steps default is 10 — enough for retrieve → rerank → generate
   with one retry, but catches infinite loops.
-
-Debt: DAY-7-002 — generate node is a stub. Needs LLM integration
-      (Day 8) with citation enforcement.
-Debt: DAY-7-003 — calculate node is a stub. Needs function calling
-      for arithmetic operations (Day 8).
 """
 
 import structlog
 
+from finrag.orchestration.generator import RAGGenerator
 from finrag.orchestration.state import GraphState
 from finrag.retrieval.hybrid import HybridRetriever
 from finrag.retrieval.reranker import CrossEncoderReranker
@@ -184,29 +180,36 @@ def rerank(
 
 
 # --------------------------------------------------------------------------- #
-# Node: Generate (Stub — LLM integration Day 8)
+# Node: Generate (LLM + Citation Enforcement)
 # --------------------------------------------------------------------------- #
 
 
-def generate(state: GraphState) -> dict:
-    """Generate an answer from reranked context chunks.
+def generate(
+    state: GraphState,
+    *,
+    rag_generator: RAGGenerator | None = None,
+) -> dict:
+    """Generate an answer from reranked context chunks using LLM.
 
-    Day 7 stub. Returns a formatted context summary as a placeholder.
-    Day 8 will replace this with LLM generation + citation enforcement.
+    Uses RAGGenerator for LLM calls with citation enforcement.
+    Falls back to stub behavior if no generator is provided
+    (for backward compatibility with Day 7 tests).
 
-    The real implementation will:
-    1. Build a system prompt with citation instructions
-    2. Include reranked chunks as context
-    3. Call the LLM with structured output (Pydantic schema)
-    4. Extract answer text and citation list
-    5. Pass to validate node for quality checks
+    Pipeline:
+    1. Pre-decline check (context quality too poor?)
+    2. LLM call with structured output (CitedAnswer schema)
+    3. Citation enforcement (hallucination detection)
+    4. Retry once with stricter prompt if enforcement fails
+    5. Return answer + enforcement status
 
     Args:
         state: Current graph state with 'reranked_chunks' field.
+        rag_generator: Optional RAGGenerator instance. If None,
+            falls back to stub behavior.
 
     Returns:
-        Dict with answer, citations, generation_model, and
-        incremented step_count.
+        Dict with answer, citations, generation_model,
+        enforcement status, and incremented step_count.
     """
     query = state.get("query", "")
     chunks = state.get("reranked_chunks", [])
@@ -216,15 +219,84 @@ def generate(state: GraphState) -> dict:
         return {
             "answer": "",
             "citations": [],
-            "generation_model": "stub_v1",
+            "generation_model": "none",
             "error": "No context chunks available for generation.",
             "step_count": step_count + 1,
         }
 
-    # Stub: concatenate top chunk texts as "answer"
+    # If no generator provided, fall back to stub (Day 7 compat)
+    if rag_generator is None:
+        return _generate_stub(query, chunks, step_count)
+
+    try:
+        cited_answer, enforcement_passed, errors = rag_generator.generate(
+            query=query,
+            context_chunks=chunks,
+        )
+
+        # Convert Pydantic model to dict for graph state
+        citations = [
+            {
+                "chunk_id": c.chunk_id,
+                "filing_reference": c.filing_reference,
+                "section": c.section,
+                "text_excerpt": c.text_excerpt,
+                "relevance_score": c.relevance_score,
+            }
+            for c in cited_answer.citations
+        ]
+
+        result: dict = {
+            "answer": cited_answer.answer_text,
+            "citations": citations,
+            "generation_model": rag_generator._model_name,
+            "step_count": step_count + 1,
+        }
+
+        if not enforcement_passed:
+            result["error"] = (
+                "Citation enforcement failed: "
+                + "; ".join(errors)
+            )
+
+        logger.info(
+            "generate_complete",
+            query_preview=query[:80],
+            confidence=cited_answer.confidence,
+            citations=len(citations),
+            enforcement_passed=enforcement_passed,
+        )
+
+        return result
+
+    except Exception as e:
+        logger.error("generate_failed", error=str(e))
+        return {
+            "answer": f"Generation error: {e}",
+            "citations": [],
+            "generation_model": "error",
+            "error": f"Generation failed: {e}",
+            "step_count": step_count + 1,
+        }
+
+
+def _generate_stub(query: str, chunks: list[dict], step_count: int) -> dict:
+    """Stub generator for backward compatibility (no LLM).
+
+    Used when RAGGenerator is not provided (e.g., in Day 7 tests
+    or when GOOGLE_API_KEY is not set).
+
+    Args:
+        query: User's question.
+        chunks: Reranked context chunks.
+        step_count: Current step count.
+
+    Returns:
+        Dict with stub answer and citations.
+    """
     context_texts = [c.get("text", "") for c in chunks[:3]]
     stub_answer = (
-        f"[STUB — Day 8 will add LLM generation]\n\n"
+        f"[STUB — No LLM configured]\n\n"
         f"Query: {query}\n\n"
         f"Based on {len(chunks)} retrieved chunks:\n\n"
         + "\n---\n".join(context_texts[:3])
@@ -244,7 +316,6 @@ def generate(state: GraphState) -> dict:
         "generate_complete_stub",
         query_preview=query[:80],
         context_chunks=len(chunks),
-        citations=len(stub_citations),
     )
 
     return {
@@ -256,52 +327,103 @@ def generate(state: GraphState) -> dict:
 
 
 # --------------------------------------------------------------------------- #
-# Node: Calculate (Stub — Function calling Day 8)
+# Node: Calculate (LLM with function calling)
 # --------------------------------------------------------------------------- #
 
 
-def calculate(state: GraphState) -> dict:
-    """Handle numerical computation queries.
+def calculate(
+    state: GraphState,
+    *,
+    rag_generator: RAGGenerator | None = None,
+) -> dict:
+    """Handle numerical computation queries via LLM.
 
-    Day 7 stub. The real implementation (Day 8) will:
-    1. Retrieve relevant chunks containing numbers
-    2. Extract numerical values using regex or LLM function calling
-    3. Perform the requested calculation (compare, diff, ratio)
-    4. Format the result with source citations
+    For now, delegates to the generate node with a calculation
+    hint in the query. The LLM extracts numbers from context
+    and performs the requested comparison/computation.
 
-    For now, routes through the standard retrieve → generate path
-    with a note that computation is needed.
+    Future enhancement: function calling tools for precise
+    arithmetic (extract → compute → format).
 
     Args:
-        state: Current graph state with 'query' field.
+        state: Current graph state with 'query' and 'reranked_chunks'.
+        rag_generator: Optional RAGGenerator instance.
 
     Returns:
-        Dict with answer indicating calculation is needed,
-        and incremented step_count.
+        Dict with answer, citations, and step_count.
     """
     query = state.get("query", "")
     chunks = state.get("reranked_chunks", [])
     step_count = state.get("step_count", 0)
 
-    stub_answer = (
-        f"[STUB — Day 8 will add calculation support]\n\n"
-        f"Query: {query}\n\n"
-        f"This query requires numerical computation. "
-        f"Available context: {len(chunks)} chunks."
+    if not chunks:
+        return {
+            "answer": "",
+            "citations": [],
+            "generation_model": "none",
+            "error": "No context chunks available for calculation.",
+            "step_count": step_count + 1,
+        }
+
+    # Enhance query with calculation instruction
+    calc_query = (
+        f"{query}\n\n"
+        f"INSTRUCTION: Extract the relevant numbers from the context, "
+        f"perform the requested calculation or comparison, and show "
+        f"your work step by step. Cite the source of each number."
     )
 
-    logger.info(
-        "calculate_stub",
-        query_preview=query[:80],
-        context_chunks=len(chunks),
-    )
+    if rag_generator is None:
+        return _generate_stub(calc_query, chunks, step_count)
 
-    return {
-        "answer": stub_answer,
-        "citations": [],
-        "generation_model": "calculate_stub_v1",
-        "step_count": step_count + 1,
-    }
+    try:
+        cited_answer, enforcement_passed, errors = rag_generator.generate(
+            query=calc_query,
+            context_chunks=chunks,
+        )
+
+        citations = [
+            {
+                "chunk_id": c.chunk_id,
+                "filing_reference": c.filing_reference,
+                "section": c.section,
+                "text_excerpt": c.text_excerpt,
+                "relevance_score": c.relevance_score,
+            }
+            for c in cited_answer.citations
+        ]
+
+        result: dict = {
+            "answer": cited_answer.answer_text,
+            "citations": citations,
+            "generation_model": rag_generator._model_name,
+            "step_count": step_count + 1,
+        }
+
+        if not enforcement_passed:
+            result["error"] = (
+                "Citation enforcement failed: "
+                + "; ".join(errors)
+            )
+
+        logger.info(
+            "calculate_complete",
+            query_preview=query[:80],
+            confidence=cited_answer.confidence,
+            citations=len(citations),
+        )
+
+        return result
+
+    except Exception as e:
+        logger.error("calculate_failed", error=str(e))
+        return {
+            "answer": f"Calculation error: {e}",
+            "citations": [],
+            "generation_model": "error",
+            "error": f"Calculation failed: {e}",
+            "step_count": step_count + 1,
+        }
 
 
 # --------------------------------------------------------------------------- #
@@ -314,14 +436,9 @@ def validate(state: GraphState) -> dict:
 
     Checks:
     1. Answer is non-empty
-    2. Citations are present (no uncited claims)
-    3. No error state from upstream nodes
+    2. Citations are present (unless stub/decline)
+    3. No critical error state from upstream nodes
     4. Step count hasn't exceeded max (loop guard)
-
-    Day 8 will add:
-    - Citation coverage check (every claim backed by a chunk)
-    - Confidence threshold check
-    - Retry logic for low-quality answers
 
     Args:
         state: Current graph state with answer and citations.
@@ -334,6 +451,7 @@ def validate(state: GraphState) -> dict:
     error = state.get("error", "")
     step_count = state.get("step_count", 0)
     max_steps = state.get("max_steps", DEFAULT_MAX_STEPS)
+    gen_model = state.get("generation_model", "")
 
     errors: list[str] = []
 
@@ -341,16 +459,17 @@ def validate(state: GraphState) -> dict:
     if step_count >= max_steps:
         errors.append(f"Max steps exceeded ({step_count}/{max_steps})")
 
-    # Check for upstream errors
-    if error:
+    # Check for upstream errors (skip soft enforcement errors)
+    if error and "enforcement" not in error.lower():
         errors.append(f"Upstream error: {error}")
 
     # Check answer presence
     if not answer.strip():
         errors.append("Empty answer generated")
 
-    # Check citations (skip for stub/decline)
-    if answer and "[STUB" not in answer and not citations:
+    # Check citations for real (non-stub, non-decline) answers
+    is_stub = "[STUB" in answer or gen_model in ("stub_v1", "decline", "error_handler")
+    if answer and not is_stub and not citations:
         errors.append("No citations provided")
 
     is_valid = len(errors) == 0
@@ -360,6 +479,7 @@ def validate(state: GraphState) -> dict:
         is_valid=is_valid,
         errors=errors,
         step_count=step_count,
+        generation_model=gen_model,
     )
 
     return {
