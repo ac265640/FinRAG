@@ -42,6 +42,6 @@ cp .env.example .env
 python scripts/ingest.py --ticker AAPL --filing-type 10-K --count 1
 ```
 
-## Project Status
+## Project  Status
 
 🏗️ Under active development. See DEBT_LEDGER.md for known shortcuts.
