@@ -1,0 +1,56 @@
+# FinRAG Prompt Configuration — Retrieval v1
+#
+# Controls retrieval behavior: multi-query expansion,
+# HyDE generation, and reranker thresholds. Versioned
+# alongside generation prompts.
+
+version: "v1"
+name: "hybrid_retrieval"
+description: "Hybrid retrieval with multi-query expansion and HyDE"
+created: "2026-04-21"
+
+# --------------------------------------------------------------------------- #
+# Retrieval Parameters
+# --------------------------------------------------------------------------- #
+retrieval:
+  top_k: 20
+  rrf_k: 60
+  strategies:
+    - "bm25"
+    - "dense"
+
+# --------------------------------------------------------------------------- #
+# Reranker Parameters
+# --------------------------------------------------------------------------- #
+reranker:
+  model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  top_k: 5
+  batch_size: 16
+
+# --------------------------------------------------------------------------- #
+# Multi-Query Expansion Prompt
+# --------------------------------------------------------------------------- #
+multi_query_prompt: |
+  You are a financial search query optimizer. Given a user question about
+  SEC filings or earnings calls, generate {num_variants} alternative
+  phrasings that would help find relevant information.
+
+  Original question: {query}
+
+  Rules:
+  - Keep financial terminology precise
+  - Include both formal (10-K language) and informal phrasings
+  - Add relevant synonyms (revenue/sales, net income/profit)
+  - One variant should be more specific, one more general
+
+# --------------------------------------------------------------------------- #
+# HyDE (Hypothetical Document Embedding) Prompt
+# --------------------------------------------------------------------------- #
+hyde_prompt: |
+  Write a short paragraph that would appear in an SEC filing (10-K or 10-Q)
+  that answers the following question. Use realistic financial language,
+  specific section references, and plausible numbers.
+
+  Question: {query}
+
+  Write only the hypothetical paragraph, nothing else.

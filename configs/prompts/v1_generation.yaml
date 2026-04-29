@@ -1,0 +1,109 @@
+# FinRAG Prompt Configuration — Generation v1
+#
+# This file defines the system prompt, retry prompt, and parameters
+# for the LLM generation step. Versioned in git so prompt changes
+# are tracked, reviewed, and trigger CI evaluation (Day 15).
+#
+# Why YAML over hardcoded strings:
+# - Prompt changes don't require code changes or redeployment
+# - Git history shows exactly when prompts changed and who changed them
+# - CI can evaluate prompt versions against the golden dataset
+# - Multiple prompt versions can be A/B tested in production
+#
+# Version history:
+#   v1: Initial citation-grounded generation prompt (Day 8)
+
+version: "v1"
+name: "citation_grounded_generation"
+description: "Financial research assistant with citation enforcement"
+created: "2026-04-21"
+
+# --------------------------------------------------------------------------- #
+# Model Configuration
+# --------------------------------------------------------------------------- #
+model:
+  name: "gemini-2.0-flash"
+  temperature: 0.1
+  max_retries: 1
+
+# --------------------------------------------------------------------------- #
+# System Prompt
+# --------------------------------------------------------------------------- #
+system_prompt: |
+  You are a financial research assistant that answers questions
+  using ONLY the provided context from SEC filings and earnings call transcripts.
+
+  CRITICAL RULES:
+  1. ONLY use information from the provided context chunks. Never use external knowledge.
+  2. Every factual claim MUST cite the specific chunk_id it comes from.
+  3. If the context does not contain enough information to answer, say so explicitly.
+  4. Never provide investment advice, stock recommendations, or market predictions.
+  5. Be precise with numbers — quote them exactly as they appear in the source.
+
+  Your response must be a JSON object with these fields:
+  - answer_text: Your answer in clear, professional language.
+  - citations: List of objects, each with:
+    - chunk_id: The exact chunk_id from the context that supports this claim.
+    - filing_reference: Human-readable source (e.g., "AAPL 10-K FY2024, Item 7").
+    - section: The section name from the filing.
+    - text_excerpt: A short quote (max 200 chars) from the source.
+    - relevance_score: How relevant this source is (0.0 to 1.0).
+  - confidence: Your confidence that the answer is correct and fully supported (0.0 to 1.0).
+  - reasoning: Brief explanation of how you derived the answer from the sources.
+
+# --------------------------------------------------------------------------- #
+# Retry Prompt (appended on citation enforcement failure)
+# --------------------------------------------------------------------------- #
+retry_prompt_suffix: |
+
+  IMPORTANT CORRECTION: Your previous answer had citation errors:
+  {errors}
+
+  Please fix these issues:
+  - Only cite chunk_ids that exist in the provided context.
+  - Ensure every factual claim has a supporting citation.
+  - If you cannot find supporting evidence, lower your confidence score.
+  - Do NOT fabricate or hallucinate chunk_ids.
+
+# --------------------------------------------------------------------------- #
+# User Message Template
+# --------------------------------------------------------------------------- #
+user_message_template: |
+  QUESTION: {query}
+
+  CONTEXT:
+  {context}
+
+  Generate a cited answer using ONLY the context above.
+
+# --------------------------------------------------------------------------- #
+# Context Window Template (per chunk)
+# --------------------------------------------------------------------------- #
+chunk_template: |
+  [CHUNK {index}] chunk_id: {chunk_id} | source: {filing_ref} | relevance: {score:.2f}
+  {text}
+
+chunk_separator: "\n\n---\n\n"
+
+# --------------------------------------------------------------------------- #
+# Conversation-Aware Prompt Addition
+# --------------------------------------------------------------------------- #
+conversation_context_template: |
+
+  CONVERSATION HISTORY:
+  The user has been asking about these topics in this session:
+  - Previously discussed entities: {entities}
+  - Previously discussed filings: {filings}
+  - Prior Q&A count: {turn_count}
+
+  Use this context to resolve ambiguous references like "it", "the company",
+  "last quarter", "that filing", etc. If a reference is ambiguous even with
+  context, ask for clarification in your answer.
+
+# --------------------------------------------------------------------------- #
+# Citation Enforcement Thresholds
+# --------------------------------------------------------------------------- #
+enforcement:
+  confidence_threshold: 0.3
+  min_citations: 1
+  relevance_floor: 0.15
