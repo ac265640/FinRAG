@@ -1,0 +1,104 @@
+ITEM 5.
+MARKET FOR REGISTRANT’S COMMON EQUITY, RELATED STOCKHOLDER MATTERS, AND ISSUER PURCHASES OF EQUITY SECURITIES
+As of October 2, 2015, Alphabet Inc. became the successor issuer of Google Inc. pursuant to Rule 12g-3(a) under the Exchange Act. Our Class A stock has been listed on the Nasdaq Global Select Market under the symbol “GOOG” since August 19, 2004, and under the symbol "GOOGL" since April 3, 2014. Prior to August 19, 2004, there was no public market for our stock. Our Class B stock is neither listed nor traded. Our Class C stock has been listed on the Nasdaq Global Select Market under the symbol “GOOG” since April 3, 2014.
+Holders of Record
+As of
+December 31, 2025
+, there were approxim
+a
+tely 5,861 and 1,611 stock
+holders of record of our Class A stock and Class C stock, respectively. Because many of our shares of Class A stock and Class C stock are held by brokers and other institutions on behalf of stockholders, we are unable to estimate the total number of stockholders represented by these record holders. As of December 31, 2025, there were approximately
+57
+st
+ockholders of record of our Class B stock.
+Dividend Program
+Dividend payments to stockholders of Class A, Class B, and Class C shares were $4.8 billion, $703 million, and $4.5 billion, respectively, for the year ended December 31, 2025. The company intends to pay quarterly cash dividends in the future, subject to review and approval by the company’s Board of Directors in its sole discretion. We regularly evaluate our cash and capital structure, including the size, pace, and form of capital return to stockholders.
+Issuer Purchases of Equity Securities
+The following table presents information with respect to Alphabet's repurchases of Class A and Class C stock during the quarter ended
+December 31, 2025
+:
+Period
+Total Number of Class A Shares Purchased
+(in thousands)
+(1)
+Total Number of Class C Shares Purchased
+(in thousands)
+(1)
+Average Price Paid per Class A Share
+(2)
+Average Price Paid per Class C Share
+(2)
+Total Number of Shares Purchased as Part of Publicly Announced Programs
+(in thousands)
+(1)
+Approximate Dollar Value of Shares that May Yet Be Purchased Under the Program
+(in millions)
+October 1 - 31
+841
+13,305
+$
+253.20
+$
+255.03
+14,146
+$
+71,231
+November 1 - 30
+209
+5,885
+$
+286.00
+$
+281.46
+6,094
+$
+69,503
+December 1 - 31
+0
+0
+$
+0.00
+$
+0.00
+0
+$
+69,503
+Total
+1,050
+19,190
+20,240
+(1)
+In April 2024, the company's Board of Directors authorized a $70.0 billion share repurchase program for its Class A and Class C shares.
+In April 2025, the company's Board of Directors authorized an additional
+$70.0 billion
+share repurchase program for its Class A and Class C shares.
+Repurchases are being executed from time to time, subject to general business and market conditions and other investment opportunities, through open market purchases or privately negotiated transactions, including through Rule 10b5-1 plans. The repurchase programs do not have an expiration date. For additional information related to share repurchases, see
+Note 11 o
+f the Notes to Consolidated Financial Statements included in Item 8 of this Annual Report on Form 10-K.
+(2)
+Average price paid per share includes costs associated with the repurchases.
+25.
+Table of Contents
+Alphabet Inc.
+Stock Performance Graphs
+The graph below matches Alphabet Inc. Class A's cumulative five-year total stockholder return on common stock with the cumulative total returns of the S&P 500 index, the NASDAQ Composite index, and the RDG Internet Composite index. The graph tracks the performance of a $100 investment in our common stock and in each index (with the reinvestment of all dividends) from December 31, 2020, to December 31, 2025. The returns shown are based on historical results and are not intended to suggest future performance.
+COMPARISON OF CUMULATIVE 5-YEAR TOTAL RETURN*
+ALPHABET INC. CLASS A COMMON STOCK
+Among Alphabet Inc., the S&P 500 Index, the
+NASDAQ Composite Index, and the RDG Internet Composite Index
+*$100 invested on December 31, 2020, in stock or index, including reinvestment of dividends.
+Copyright
+©
+2026 S&P, a division of The McGraw-Hill Companies Inc. All rights reserved.
+26.
+Table of Contents
+Alphabet Inc.
+The graph below matches Alphabet Inc. Class C's cumulative five-year total stockholder return on capital stock with the cumulative total returns of the S&P 500 index, the NASDAQ Composite index, and the RDG Internet Composite index. The graph tracks the performance of a $100 investment in our Class C capital stock and in each index (with the reinvestment of all dividends) from December 31, 2020, to December 31, 2025. The returns shown are based on historical results and are not intended to suggest future performance.
+COMPARISON OF CUMULATIVE 5-YEAR TOTAL RETURN*
+ALPHABET INC. CLASS C CAPITAL STOCK
+Among Alphabet Inc., the S&P 500 Index, the
+NASDAQ Composite Index, and the RDG Internet Composite Index
+*$100 invested on December 31, 2020, in stock or in index, including reinvestment of dividends.
+Copyright
+©
+2026 S&P, a division of The McGraw-Hill Companies Inc. All rights reserved.

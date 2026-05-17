@@ -1,0 +1,14 @@
+{
+  "cik": "0001318605",
+  "ticker": "TSLA",
+  "company_name": "Tesla, Inc.",
+  "filing_type": "10-Q",
+  "filing_date": "2026-04-23",
+  "accession_number": "0001628280-26-026673",
+  "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1318605/000162828026026673/tsla-20260331.htm",
+  "raw_content_length": 1240759,
+  "sections_found": [
+    "full_text"
+  ],
+  "saved_at": "2026-05-17T03:26:17.757113"
+}

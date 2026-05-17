@@ -28,8 +28,6 @@ htmlcov/
 .coverage
 
 # Data (raw filings are large, not committed)
-data/raw/
-data/processed/
 
 # OS
 .DS_Store
@@ -45,6 +43,4 @@ ROADMAP.md
 DEBT_LEDGER.md
 CONTRIBUTING.md
 .claude/
-data/chroma/
-data/chroma.sqlite3
 

@@ -1,0 +1,438 @@
+ITEM 15.
+EXHIBITS, FINANCIAL STATEMENT SCHEDULES
+We have filed the following documents as part of this Annual Report on Form 10-K:
+1. Consolidated Financial Statements
+Reports of Independent Registered Public Accounting Firm
+45
+Financial Statements:
+Consolidated Balance Sheets
+48
+Consolidated Statements of Income
+49
+Consolidated Statements of Comprehensive Income
+50
+Consolidated Statements of Stockholders’ Equity
+51
+Consolidated Statements of Cash Flows
+52
+Notes to Consolidated Financial Statements
+53
+2. Financial Statement Schedules
+Schedule II: Valuation and Qualifying Accounts
+The table below details the activity of the allowance for credit losses and sales credits for the years ended December 31, 2023, 2024, and 2025 (in millions):
+Balance at
+Beginning of Year
+Additions
+Usage
+Balance at
+End of Year
+Year ended December 31, 2023
+$
+1,213
+$
+3,115
+$
+(
+2,737
+)
+$
+1,591
+Year ended December 31, 2024
+$
+1,591
+$
+2,895
+$
+(
+2,850
+)
+$
+1,636
+Year ended December 31, 2025
+$
+1,636
+$
+4,128
+$
+(
+3,408
+)
+$
+2,356
+Note:
+Additions to the allowance for credit losses are charged to expense. Additions to the allowance for sales credits are charged against revenues.
+All other schedules have been omitted because they are not required, not applicable, or the required information is otherwise included.
+3. Exhibits
+Exhibit
+Number
+Description
+Incorporated by reference herein
+Form
+Date
+2.01
+Agreement and Plan of Merger, dated October 2, 2015, by and among Google Inc., the Registrant and Maple Technologies Inc.
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+3.01
+Amended and Restated Certificate of Incorporation of the Registrant
+Current Report on Form 8-K (File No. 001-37580)
+June 3, 2022
+3.02
+Amended and Restated Bylaws of the Registrant, dated October 19, 2022
+Current Report on Form 8-K (File No. 001-37580)
+October 25, 2022
+4.01
+Specimen Class A Common Stock certificate
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+4.02
+Specimen Class C Capital Stock certificate
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+4.03
+u
+Alphabet Inc. Deferred Compensation Plan
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+4.04
+Transfer Restriction Agreement, dated October 2, 2015, between the Registrant and Larry Page and certain of his affiliates
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+4.05
+Transfer Restriction Agreement, dated October 2, 2015, between the Registrant and Sergey Brin and certain of his affiliates
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+4.06
+Joinder Agreement, dated December 31, 2021, among the Registrant, Sergey Brin and certain of his affiliates
+Annual Report on Form 10-K (File No. 001-37580)
+February 2, 2022
+92.
+Table of Contents
+Alphabet Inc.
+Exhibit
+Number
+Description
+Incorporated by reference herein
+Form
+Date
+4.07
+Transfer Restriction Agreement, dated October 2, 2015, between the Registrant and Eric E. Schmidt and certain of its affiliates
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+4.08
+Class C Undertaking, dated October 2, 2015, executed by the Registrant
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+4.09
+Indenture, dated February 12, 2016, between the Registrant and The Bank of New York Mellon Trust Company, N.A., as Trustee
+Registration Statement on Form S-3
+(File No. 333-209510)
+February 12, 2016
+4.10
+Registrant Registration Rights Agreement dated December 14, 2015
+Registration Statement on Form S-3
+(File No. 333-209518)
+February 12, 2016
+4.11
+First Supplemental Indenture, dated April 27, 2016, between the Registrant and The Bank of New York Mellon Trust Company, N.A., as trustee
+Current Report on Form 8-K
+(File No. 001-37580)
+April 27, 2016
+4.12
+Form of the Registrant’s 1.998% Note due 2026
+Current Report on Form 8-K (File No. 001-37580)
+August 9, 2016
+4.13
+Form of Global Note representing the Registrant’s 0.800% notes due 2027
+Current Report on Form 8-K (File No. 001-37580)
+August 5, 2020
+4.14
+Form of Global Note representing the Registrant’s 1.100% notes due 2030
+Current Report on Form 8-K (File No. 001-37580)
+August 5, 2020
+4.15
+Form of Global Note representing the Registrant’s 1.900% notes due 2040
+Current Report on Form 8-K (File No. 001-37580)
+August 5, 2020
+4.16
+Form of Global Note representing the Registrant’s 2.050% notes due 2050
+Current Report on Form 8-K (File No. 001-37580)
+August 5, 2020
+4.17
+Form of Global Note representing the Registrant’s 2.250% notes due 2060
+Current Report on Form 8-K (File No. 001-37580)
+August 5, 2020
+4.18
+Form of Global Note representing the
+Registrant’s 4.000% notes due 2030
+Current Report on Form 8-K (File No. 001-37580)
+May 1, 2025
+4.19
+Form of Global Note representing the Registrant’s 4.500% notes due 2035
+Current Report on Form 8-K
+(File No. 001-37580)
+May 1, 2025
+4.20
+Form of Global Note representing the Registrant’s 5.250% notes due 2055
+Current Report on Form 8-K
+(File No. 001-37580)
+May 1, 2025
+4.21
+Form of Global Note representing the Registrant’s 5.300% notes due 2065
+Current Report on Form 8-K
+(File No. 001-37580)
+May 1, 2025
+4.22
+Form of Global Note representing the Registrant’s 2.500% notes due 2029
+Current Report on Form 8-K
+(File No. 001-37580)
+May 6, 2025
+4.23
+Form of Global Note representing the Registrant’s 3.000% notes due 2033
+Current Report on Form 8-K (File No. 001-37580)
+May 6, 2025
+4.24
+Form of Global Note representing the Registrant’s 3.375% notes due 2037
+Current Report on Form 8-K (File No. 001-37580)
+May 6, 2025
+4.25
+Form of Global Note representing the Registrant’s 3.875% notes due 2045
+Current Report on Form 8-K (File No. 001-37580)
+May 6, 2025
+4.26
+Form of Global Note representing the Registrant’s 4.000% notes due 2054
+Current Report on Form 8-K (File No. 001-37580)
+May 6, 2025
+4.27
+Form of Global Note representing the Registrant’s 2.375% notes due 2028
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.28
+Form of Global Note representing the Registrant’s 2.875% notes due 2031
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.29
+Form of Global Note representing the Registrant’s 3.125% notes due 2034
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.30
+Form of Global Note representing the Registrant’s 3.500% notes due 2038
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.31
+Form of Global Note representing the Registrant’s 4.000% notes due 2044
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+93.
+Table of Contents
+Alphabet Inc.
+Exhibit
+Number
+Description
+Incorporated by reference herein
+Form
+Date
+4.32
+Form of Global Note representing the Registrant’s 4.375% notes due 2064
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.33
+F
+orm of Global Note representing the Registrant’s floating rate notes due 2028
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.34
+Form of Global Note representing the Registrant’s 3.875% notes due 2028
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.35
+Form of Global Note representing the Registrant’s 4.100% notes due 2030
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.36
+Form of Global Note representing the Registrant’s 4.375% notes due 2032
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.37
+Form of Global Note representing the Registrant’s 4.700% notes due 2035
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.38
+Form of Global Note representing the Registrant’s 5.350% notes due 2045
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.39
+Form of Global Note representing the Registrant’s 5.450% notes due 2055
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.40
+Form of Global Note representing the Registrant’s 5.700% notes due 2075
+Current Report on Form 8-K (File No. 001-37580)
+November 6, 2025
+4.41
+Description of Registrant’s Securities
+Annual Report on Form 10-K (File No. 001-37580)
+February 3, 2023
+10.01
+u
+Form of Indemnification Agreement entered into between the Registrant, its affiliates and its directors and officers
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+10.02
+u
+Form of Offer Letter for Directors
+Annual Report on Form 10-K (File No. 001-37580)
+January 31, 2024
+10.03
+u
+Letter Agreement dated June 3, 2024, between Anat Ashkenazi and Alphabet
+Current Report on Form 8-K (File No. 001-37580)
+June 7, 2024
+10.04
+u
+Compensation Plan Agreement, dated October 2, 2015, between Google Inc. and the Registrant
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+10.05
+u
+Director Arrangements Agreement, dated October 2, 2015, between Google Inc. and the Registrant
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+10.06
+u
+Alphabet Inc. Deferred Compensation Plan
+Current Report on Form 8-K (File No. 001-37580)
+October 2, 2015
+10.07
+u
+Alphabet Inc. Amended and Restated 2012 Stock Plan
+Current Report on Form 8-K
+(File No. 001-37580)
+June 5, 2020
+10.07.1
+u
+Alphabet Inc. Amended and Restated 2012 Stock Plan - Form of Alphabet Restricted Stock Unit Agreement
+Annual Report on Form 10-K
+(File No. 001-37580)
+February 4, 2020
+10.08
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan
+Current Report on Form 8-K (file No. 001-37580)
+June 8, 2023
+10.08.1
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan - Form of Alphabet Restricted Stock Unit Agreement
+Quarterly Report on Form 10-Q (file No. 001-37580)
+July 28, 2021
+10.08.2
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan - Form of Alphabet Restricted Stock Unit Agreement
+Quarterly Report on Form 10-Q (File No. 001-37580)
+July 26, 2023
+10.08.3
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan – Form of Alphabet Restricted Stock Unit Agreement
+Quarterly Report on Form 10-Q (File No. 001-37580)
+April 26, 2024
+10.08.4
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan - Form of Alphabet 2022 CEO Performance Stock Unit Agreement
+Annual Report on Form 10-K (File No. 001-37580)
+February 3, 2023
+94.
+Table of Contents
+Alphabet Inc.
+Exhibit
+Number
+Description
+Incorporated by reference herein
+Form
+Date
+10.08.5
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan – Form of Alphabet CEO Performance Stock Unit Agreement
+Quarterly Report on Form 10-Q (File No. 001-37580)
+April 26, 2024
+10.08.6
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan - Form of Alphabet 2022 Non-CEO Performance Stock Unit Agreement
+Annual Report on Form 10-K
+(File No. 001-37580)
+February 2, 2022
+10.08.7
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan - Form of Alphabet 2023 Non-CEO Performance Stock Unit Agreement
+Quarterly Report on Form 10-Q (File No. 001-37580)
+July 26, 2023
+10.08.8
+u
+Alphabet Inc. Amended and Restated 2021 Stock Plan – Form of Alphabet Non-CEO Performance Stock Unit Agreement
+Quarterly Report on Form 10-Q (File No. 001-37580)
+April 26, 2024
+10.09
+u
+Alphabet Inc. Company Bonus Plan, as amended
+Annual Report on Form 10-K
+(File No. 001-37350)
+February 2, 2023
+19.01
+Alphabet Inc. Policy Against Insider Trading
+Annual Report on Form 10-K
+(File No. 001-37350)
+February 5, 2025
+21.01
+*
+Subsidiaries of the Registrant
+23.01
+*
+Consent of Independent Registered Public Accounting Firm
+24.01
+*
+Power of Attorney (incorporated by reference to the signature page of this Annual Report on Form 10-K)
+31.01
+*
+Certification of Chief Executive Officer pursuant to Exchange Act Rules 13a-14(a) and 15d-14(a), as adopted pursuant to Section 302 of the Sarbanes-Oxley Act of 2002
+31.02
+*
+Certification of Chief Financial Officer pursuant to Exchange Act Rules 13a-14(a) and 15d-14(a), as adopted pursuant to Section 302 of the Sarbanes-Oxley Act of 2002
+32.01
+‡
+Certifications of Chief Executive Officer and Chief Financial Officer pursuant to 18 U.S.C. Section 1350, as adopted pursuant to Section 906 of the Sarbanes-Oxley Act of 2002
+97.01
+u
+Clawback Policy
+Annual Report on Form 10-K
+(File No. 001-37350)
+January 31, 2024
+101.INS
+*
+Inline XBRL Instance Document - the instance document does not appear in the Interactive Data File because its XBRL tags are embedded within the Inline XBRL document
+101.SCH
+*
+Inline XBRL Taxonomy Extension Schema Document
+101.CAL
+*
+Inline XBRL Taxonomy Extension Calculation Linkbase Document
+101.DEF
+*
+Inline XBRL Taxonomy Extension Definition Linkbase Document
+101.LAB
+*
+Inline XBRL Taxonomy Extension Label Linkbase Document
+101.PRE
+*
+Inline XBRL Taxonomy Extension Presentation Linkbase Document
+104
+*
+Cover Page Interactive Data File (embedded within the Inline XBRL document and contained in Exhibit 101)
+95.
+Table of Contents
+Alphabet Inc.
+_________________
+u
+Indicates management compensatory plan, contract, or arrangement.
+*
+Filed herewith.
+‡
+Furnished herewith.

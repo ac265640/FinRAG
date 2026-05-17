@@ -1,0 +1,31 @@
+{
+  "cik": "0001652044",
+  "ticker": "GOOGL",
+  "company_name": "Alphabet Inc.",
+  "filing_type": "10-K",
+  "filing_date": "2026-02-05",
+  "accession_number": "0001652044-26-000018",
+  "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+  "raw_content_length": 2616499,
+  "sections_found": [
+    "Item 1A - Risk Factors",
+    "Item 1B - Unresolved Staff Comments",
+    "Item 2 - Properties",
+    "Item 3 - Legal Proceedings",
+    "Item 5 - Market for Common Equity",
+    "Item 6 - Reserved",
+    "Item 7A - Quantitative and Qualitative Disclosures About Market Risk",
+    "Item 8 - Financial Statements",
+    "Item 9A - Controls and Procedures",
+    "Item 9B - Other Information",
+    "Item 9 - Changes in and Disagreements with Accountants",
+    "Item 10 - Directors and Corporate Governance",
+    "Item 11 - Executive Compensation",
+    "Item 12 - Security Ownership",
+    "Item 13 - Certain Relationships",
+    "Item 14 - Principal Accountant Fees",
+    "Item 15 - Exhibits and Financial Statement Schedules",
+    "Item 1 - Business"
+  ],
+  "saved_at": "2026-05-17T02:58:13.970782"
+}

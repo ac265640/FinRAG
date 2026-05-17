@@ -1,0 +1,14 @@
+{
+  "cik": "0000789019",
+  "ticker": "MSFT",
+  "company_name": "MICROSOFT CORP",
+  "filing_type": "10-Q",
+  "filing_date": "2026-04-29",
+  "accession_number": "0001193125-26-191507",
+  "primary_document_url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526191507/msft-20260331.htm",
+  "raw_content_length": 7731948,
+  "sections_found": [
+    "full_text"
+  ],
+  "saved_at": "2026-05-17T03:26:09.483167"
+}

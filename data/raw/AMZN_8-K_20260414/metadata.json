@@ -1,0 +1,14 @@
+{
+  "cik": "0001018724",
+  "ticker": "AMZN",
+  "company_name": "AMAZON COM INC",
+  "filing_type": "8-K",
+  "filing_date": "2026-04-14",
+  "accession_number": "0001104659-26-042880",
+  "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1018724/000110465926042880/tm2611746d1_8k.htm",
+  "raw_content_length": 51239,
+  "sections_found": [
+    "full_text"
+  ],
+  "saved_at": "2026-05-17T03:26:58.062616"
+}

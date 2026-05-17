@@ -1,0 +1,14 @@
+{
+  "cik": "0000320193",
+  "ticker": "AAPL",
+  "company_name": "Apple Inc.",
+  "filing_type": "8-K",
+  "filing_date": "2026-02-24",
+  "accession_number": "0001140361-26-006577",
+  "primary_document_url": "https://www.sec.gov/Archives/edgar/data/320193/000114036126006577/ef20060722_8k.htm",
+  "raw_content_length": 73012,
+  "sections_found": [
+    "full_text"
+  ],
+  "saved_at": "2026-05-17T03:26:41.431141"
+}

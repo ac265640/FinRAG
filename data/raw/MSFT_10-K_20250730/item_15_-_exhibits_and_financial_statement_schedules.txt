@@ -1,0 +1,37 @@
+Item 15
+Incorporated by Reference
+Exhibit
+Number
+Exhibit Description
+Filed
+Herewith
+Form
+Period
+Ending
+Exhibit
+Filing Date
+32.2**
+Certification of Chief Financial Officer Pursuant to Section 906 of the Sarbanes-Oxley Act of 2002
+X
+97.1*
+Microsoft Corporation Executive Compensation Recovery Policy
+10-K
+6/30/2024
+97.1
+7/30/2024
+101.INS
+Inline XBRL Instance Document—the instance document does not appear in the Interactive Data File as its XBRL tags are embedded within the Inline XBRL document
+X
+101.SCH
+Inline XBRL Taxonomy Extension Schema With Embedded Linkbase Documents
+X
+104
+Cover page formatted as Inline XBRL and contained in Exhibit 101
+X
+*
+Indicates a management contract or compensatory plan or arrangement.
+**
+Furnished, not filed.
+99
+PART IV
+Item 16

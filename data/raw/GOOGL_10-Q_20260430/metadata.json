@@ -1,0 +1,14 @@
+{
+  "cik": "0001652044",
+  "ticker": "GOOGL",
+  "company_name": "Alphabet Inc.",
+  "filing_type": "10-Q",
+  "filing_date": "2026-04-30",
+  "accession_number": "0001652044-26-000048",
+  "primary_document_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000048/goog-20260331.htm",
+  "raw_content_length": 1714713,
+  "sections_found": [
+    "full_text"
+  ],
+  "saved_at": "2026-05-17T03:26:19.885909"
+}

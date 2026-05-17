@@ -1,0 +1,43 @@
+Item 8
+Income Taxes – Uncertain Tax Positions – Refer to Note 11 to the financial statements
+Critical Audit Matter Description
+The Company’s long-term income taxes liability includes uncertain tax positions related to transfer pricing issues that remain unresolved with the Internal Revenue Service (“IRS”). The Company remains under IRS audit, or subject to IRS audit, for tax years subsequent to 2003. During fiscal year 2024, the Company received Notices of Proposed Adjustments (“NOPAs”) for the tax years 2004 to 2013, primarily related to intercompany transfer pricing. While the Company has settled a portion of the IRS audits, resolution of the remaining matters could have a material impact on the Company’s financial statements.
+Conclusions on recognizing and measuring uncertain tax positions involve significant estimates and management judgment and include complex considerations of the Internal Revenue Code, related regulations, tax case laws, and prior-year audit settlements. Given the complexity and the subjective nature of certain transfer pricing issues that remain unresolved with the IRS, evaluating management’s estimates relating to their determination of uncertain tax positions required a high degree of auditor judgment, including involvement of our tax specialists.
+How the Critical Audit Matter Was Addressed in the Audit
+Our principal audit procedures to evaluate management’s estimates of uncertain tax positions related to unresolved transfer pricing issues included the following:
+•
+We evaluated management’s methods and assumptions used in the measurement and disclosure of uncertain tax positions, which included testing the effectiveness of the related internal controls.
+•
+We tested the reasonableness of management’s judgments regarding the future resolution of uncertain tax positions, as follows:
+o
+We evaluated whether management had appropriately considered new information that could significantly change the measurement of the uncertain tax positions.
+o
+We evaluated the reasonableness of management’s estimates by considering how changes in tax law, including statutes, regulations, and recent case law, impacted management’s judgments.
+•
+We evaluated the appropriateness of the disclosures in relation to the underlying facts, judgments, and conclusions.
+/s/
+D
+ELOITTE
+& T
+OUCHE
+LLP
+Seattle, Washington
+July 30, 2025
+We have served as the Company's auditor since 1983.
+88
+PART II
+Item 9, 9A
+ITEM 9. CHANGES IN AND DISAGREEMENTS WITH ACCOU
+NTANTS ON ACCOUNTING AND FINANCIAL DISCLOSURE
+Not applicable.
+ITEM 9A. CONTROLS
+AND PROCEDURES
+Under the supervision and with the participation of our management, including the Chief Executive Officer and Chief Financial Officer, we have evaluated the effectiveness of our disclosure controls and procedures as required by Exchange Act Rule 13a-15(b) as of the end of the period covered by this report. Based on that evaluation, the Chief Executive Officer and Chief Financial Officer have concluded that these disclosure controls and procedures are effective.
+REPORT OF MANAGEMENT ON INTERNAL C
+ONTROL OVER FINANCIAL REPORTING
+Our management is responsible for establishing and maintaining adequate internal control over financial reporting for the Company. Internal control over financial reporting is a process to provide reasonable assurance regarding the reliability of our financial reporting for external purposes in accordance with accounting principles generally accepted in the United States of America. Internal control over financial reporting includes maintaining records that in reasonable detail accurately and fairly reflect our transactions; providing reasonable assurance that transactions are recorded as necessary for preparation of our consolidated financial statements; providing reasonable assurance that receipts and expenditures of company assets are made in accordance with management authorization; and providing reasonable assurance that unauthorized acquisition, use, or disposition of company assets that could have a material effect on our consolidated financial statements would be prevented or detected on a timely basis. Because of its inherent limitations, internal control over financial reporting is not intended to provide absolute assurance that a misstatement of our consolidated financial statements would be prevented or detected.
+Management conducted an evaluation of the effectiveness of our internal control over financial reporting based on the framework in
+Internal Control – Integrated Framework (2013)
+issued by the Committee of Sponsoring Organizations of the Treadway Commission. Based on this evaluation, management concluded that the Company’s internal control over financial reporting was effective as of June 30, 2025. There were no changes in our internal control over financial reporting during the quarter ended June 30, 2025 that have materially affected, or are reasonably likely to materially affect, our internal control over financial reporting. Deloitte & Touche LLP has audited our internal control over financial reporting as of June 30, 2025; their report is included in Item 9A.
+89
+PART II
