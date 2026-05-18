@@ -227,19 +227,19 @@ function handleNamedEvent(
     return;
   }
 
+  // Server-side error event
+  if (eventName === "error") {
+    const errorMsg = (data.error as string) ?? "Unknown server error";
+    callbacks.onError(errorMsg);
+    return;
+  }
+
   // Stream complete
   if (eventName === "done") {
     const route = (data.route as string) ?? "";
     const isDeclined = (data.is_declined as boolean) ?? false;
     const isValid = (data.is_valid as boolean) ?? false;
     const hasAnswer = getAnswer().trim().length > 0;
-
-  // Server-side error
-  if (eventName === "error") {
-    const errorMsg = (data.error as string) ?? "Unknown server error";
-    callbacks.onError(errorMsg);
-    return;
-  }
 
     // Decline on explicit signal, wrong route, or completely empty answer
     const declined =
@@ -265,7 +265,6 @@ function handleNamedEvent(
       callbacks.onDecline(reason);
     }
 
-
     callbacks.onComplete({
       answer: getAnswer(),
       citations: accumulatedCitations,
@@ -274,11 +273,6 @@ function handleNamedEvent(
       decline_reason: declined ? "See decline reason above." : null,
     });
     return;
-  }
-
-  // Error event
-  if (eventName === "error") {
-    callbacks.onError((data.error as string) ?? "Unknown backend error.");
   }
 }
 

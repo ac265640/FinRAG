@@ -22,8 +22,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090b" }
+    { media: "(prefers-color-scheme: light)", color: "#000000" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({
       className={`${inter.variable} ${ibmPlexMono.variable} antialiased dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen bg-background font-sans text-foreground">
+      <body className="min-h-screen font-sans" style={{ background: "#000", color: "rgba(255,255,255,0.9)", overflow: "hidden" }}>
         {children}
       </body>
     </html>

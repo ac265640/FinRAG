@@ -1,124 +1,146 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import Sidebar from "@/components/Sidebar";
-import QueryPanel from "@/components/QueryPanel";
-import CitationDrawer from "@/components/CitationDrawer";
-import { useFinRAGQuery } from "@/hooks/useFinRAGQuery";
-import type { Citation, QueryFilters } from "@/lib/types";
-import { DEFAULT_FILTERS } from "@/lib/constants";
-import { checkHealth } from "@/lib/api";
+import Link from "next/link";
+import Galaxy from "@/components/Galaxy";
+import GradientText from "@/components/GradientText";
+import FinRAGLogo from "@/components/FinRAGLogo";
+import { motion } from "motion/react";
 
-export default function Home() {
-  const [filters, setFilters] = useState<QueryFilters>(DEFAULT_FILTERS);
-  const [selectedCitation, setSelectedCitation] = useState<Citation | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [pendingQuery, setPendingQuery] = useState<string>("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  useEffect(() => {
-    const check = async () => {
-      try {
-        const healthy = await checkHealth();
-        setIsOnline(healthy);
-      } catch {
-        setIsOnline(false);
-      }
-    };
-    check();
-    const interval = setInterval(check, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleCitationClick = useCallback((citation: Citation) => {
-    setSelectedCitation(citation);
-    setDrawerOpen(true);
-  }, []);
-
-  const handleDrawerClose = useCallback(() => {
-    setDrawerOpen(false);
-    setTimeout(() => setSelectedCitation(null), 300);
-  }, []);
-
-  const handleExampleSelect = useCallback((query: string) => {
-    setPendingQuery(query);
-    if (isMobile) setMobileMenuOpen(false);
-  }, [isMobile]);
-
-  const finragState = useFinRAGQuery();
-
+export default function LandingPage() {
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="min-h-screen w-full bg-black text-white selection:bg-primary/30 relative overflow-hidden flex flex-col">
       
-      {/* Mobile Header (Only visible on small screens) */}
-      {isMobile && (
-        <div className="absolute top-0 left-0 right-0 h-14 border-b border-border bg-background/95 backdrop-blur flex items-center justify-between px-4 z-40">
-          <div className="font-semibold text-lg">FinRAG</div>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 -mr-2 text-muted-foreground hover:text-foreground"
-            aria-label="Toggle Menu"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {mobileMenuOpen ? (
-                <path d="M18 6L6 18M6 6l12 12" />
-              ) : (
-                <path d="M3 12h18M3 6h18M3 18h18" />
-              )}
-            </svg>
-          </button>
+      {/* ── Background ── */}
+      <div className="absolute inset-0 z-0 opacity-80">
+        <Galaxy 
+          mouseRepulsion={true}
+          mouseInteraction={true}
+          density={1.2}
+          glowIntensity={0.4}
+          saturation={0}
+          hueShift={140}
+          twinkleIntensity={0.4}
+          rotationSpeed={0.1}
+          repulsionStrength={2}
+          starSpeed={0.3}
+          speed={0.8}
+        />
+      </div>
+
+      {/* ── Header ── */}
+      <header className="relative z-10 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto w-full">
+        <div className="flex items-center gap-2">
+          <FinRAGLogo size="lg" />
         </div>
-      )}
+        <Link 
+          href="/chat" 
+          className="text-sm font-medium px-5 py-2.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all backdrop-blur-md"
+        >
+          Enter Platform
+        </Link>
+      </header>
 
-      {/* Sidebar Overlay for Mobile */}
-      {isMobile && mobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 transition-opacity" 
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
+      {/* ── Main Content ── */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 text-center max-w-5xl mx-auto w-full py-12">
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="flex flex-col items-center gap-6"
+        >
+          {/* Title with Gradient Text */}
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white mb-2 leading-tight">
+            <GradientText
+              colors={["#ff4444", "#ff8888", "#ff4444"]}
+              animationSpeed={6}
+              showBorder={false}
+              className="inline-block mt-2"
+            >
+              Financial Intelligence.
+            </GradientText>
+          </h1>
 
-      {/* Sidebar Area */}
-      <div 
-        className={`
-          fixed md:relative z-50 h-full transform transition-transform duration-300 ease-in-out
-          ${isMobile ? (mobileMenuOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
-        `}
-      >
-        <Sidebar
-          filters={filters}
-          onFiltersChange={setFilters}
-          onExampleSelect={handleExampleSelect}
-          isOnline={isOnline}
-        />
-      </div>
+          {/* Description */}
+          <p className="text-lg sm:text-xl text-white/60 max-w-3xl leading-relaxed mt-4 font-light">
+            FinRAG is an enterprise-grade financial data intelligence platform driven by advanced RAG architectures. 
+            Automate your financial workflows and perform predictive risk analysis over SEC EDGAR 10-K, 10-Q, and 8-K filings. 
+            Leverage AI-powered analytics to extract real-time market intelligence with scalable, data-driven decision systems.
+          </p>
 
-      {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col relative w-full h-full ${isMobile ? 'pt-14' : ''}`}>
-        <QueryPanel
-          filters={filters}
-          onCitationClick={handleCitationClick}
-          pendingQuery={pendingQuery}
-          onPendingQueryConsumed={() => setPendingQuery("")}
-          finragState={finragState}
-        />
-      </div>
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 mt-8">
+            <Link 
+              href="/chat"
+              className="group relative px-8 py-4 bg-primary text-white font-medium rounded-full overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]"
+            >
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+              <span className="relative flex items-center gap-2">
+                Start Chatting
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
+            </Link>
+          </div>
+        </motion.div>
 
-      {/* Global Citation Drawer */}
-      <CitationDrawer
-        citation={selectedCitation}
-        isOpen={drawerOpen}
-        onClose={handleDrawerClose}
-      />
+        {/* ── Features Grid ── */}
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-32 mb-16"
+          id="features"
+        >
+          {/* Feature 1 */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left p-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.04] transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 border border-primary/20">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-3">Citation Enforced</h3>
+            <p className="text-sm text-white/50 leading-relaxed">
+              Every answer generated is explicitly linked to the exact paragraph in the SEC filing. Total transparency, zero hallucinations.
+            </p>
+          </div>
+
+          {/* Feature 2 */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left p-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.04] transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 border border-primary/20">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-3">Deep SEC Integration</h3>
+            <p className="text-sm text-white/50 leading-relaxed">
+              Native understanding of complex 10-K, 10-Q, and 8-K document structures, financial tables, and corporate disclosures.
+            </p>
+          </div>
+
+          {/* Feature 3 */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left p-8 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.04] transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 border border-primary/20">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-3">Real-time Analysis</h3>
+            <p className="text-sm text-white/50 leading-relaxed">
+              Instantly summarize reports, extract risk factors, and analyze management's future guidance at lightning speed.
+            </p>
+          </div>
+        </motion.div>
+
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className="relative z-10 border-t border-white/10 py-8 text-center text-sm text-white/40">
+        <p>© {new Date().getFullYear()} FinRAG. Advanced Financial Research System.</p>
+      </footer>
+      
     </div>
   );
 }

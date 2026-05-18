@@ -4,15 +4,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import PipelineProgress from "./PipelineProgress";
 import CitationChip from "./CitationChip";
 import DeclineState from "./DeclineState";
+import FinRAGLogo from "./FinRAGLogo";
 import type { Citation, QueryFilters, ChatMessage } from "@/lib/types";
 
-// ─── Constants ─────────────────────────────────────────────────────────────
+// ─── Constants ──────────────────────────────────────────────────────────────
 
-/**
- * Returns a summarization prompt tailored to the specific filing type.
- * 8-K filings cover a single event — asking for risk factors or guidance
- * will always produce a decline. Match the prompt to what the filing contains.
- */
 function getSummarizePrompt(filingType: string): string {
   switch (filingType.toUpperCase()) {
     case "10-K":
@@ -81,7 +77,7 @@ function renderAnswerWithCitations(
               />
             );
           }
-          return <span key={i} className="text-primary font-medium">{part}</span>;
+          return <span key={i} style={{ color: "hsl(var(--primary))" }} className="font-medium">{part}</span>;
         }
         return <span key={i}>{part}</span>;
       })}
@@ -89,12 +85,10 @@ function renderAnswerWithCitations(
   );
 }
 
-// ─── Single Chat Message Bubble ─────────────────────────────────────────────
+// ─── Single Chat Message Bubble ──────────────────────────────────────────────
 
 function ChatMessageBubble({
-  message,
-  filters,
-  onCitationClick,
+  message, filters, onCitationClick,
 }: {
   message: ChatMessage;
   filters: QueryFilters;
@@ -104,18 +98,18 @@ function ChatMessageBubble({
 
   return (
     <div className="w-full space-y-5 animate-fade-in">
-      {/* User Query Bubble */}
+      {/* User Query */}
       <div className="flex flex-col items-end w-full">
-        <div className="bg-secondary/50 border border-border px-5 py-3.5 rounded-xl rounded-tr-sm max-w-[85%] backdrop-blur-sm">
-          <p className="text-foreground font-mono text-sm">{message.query}</p>
+        <div className="user-bubble max-w-[85%]">
+          <p className="text-sm font-mono" style={{ color: "rgba(255,255,255,0.9)" }}>{message.query}</p>
         </div>
       </div>
 
       {/* Error */}
       {message.error && (
-        <div className="p-4 border border-red-900/50 bg-red-900/10 text-red-400 rounded-xl">
-          <h4 className="font-semibold mb-1 font-mono">Error processing request</h4>
-          <p className="text-sm">{message.error}</p>
+        <div className="p-4 rounded-xl" style={{ border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: "#f87171" }}>
+          <h4 className="font-semibold mb-1 font-mono text-sm">Error processing request</h4>
+          <p className="text-xs">{message.error}</p>
         </div>
       )}
 
@@ -143,34 +137,43 @@ function ChatMessageBubble({
       {!message.declined && (message.answer || message.isLoading) && (
         <div className="flex flex-col items-start w-full gap-4">
 
-          {/* Assistant Icon & Meta */}
+          {/* Assistant header */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
-                <path d="M22 12a10 10 0 0 0-10-10v10h10z" />
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "hsl(var(--primary) / 0.12)",
+                border: "1px solid hsl(var(--primary) / 0.25)",
+                color: "hsl(var(--primary))",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 40 40" fill="none">
+                <rect x="8" y="12" width="24" height="20" rx="10" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="15" cy="21" r="2.5" fill="currentColor"/>
+                <circle cx="25" cy="21" r="2.5" fill="currentColor"/>
+                <path d="M15 27 Q20 29.5 25 27" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
               </svg>
             </div>
-            <span className="font-semibold text-foreground text-sm">FinRAG</span>
+            <span className="font-semibold text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>FinRAG</span>
             {message.confidence !== null && !message.isLoading && (
               <span className={`text-xs px-2 py-0.5 rounded-full font-mono ${
-                message.confidence > 0.8 ? "bg-green-900/30 text-green-400 border border-green-900/50" :
-                message.confidence > 0.5 ? "bg-yellow-900/30 text-yellow-400 border border-yellow-900/50" :
-                "bg-red-900/30 text-red-400 border border-red-900/50"
+                message.confidence > 0.8 ? "bg-green-900/20 text-green-400 border border-green-900/40" :
+                message.confidence > 0.5 ? "bg-yellow-900/20 text-yellow-400 border border-yellow-900/40" :
+                "bg-red-900/20 text-red-400 border border-red-900/40"
               }`}>
                 {(message.confidence * 100).toFixed(0)}% confidence
               </span>
             )}
           </div>
 
-          {/* Text Content */}
-          <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed whitespace-pre-wrap pl-11">
+          {/* Text */}
+          <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed whitespace-pre-wrap pl-11" style={{ color: "rgba(255,255,255,0.8)" }}>
             {renderAnswerWithCitations(message.answer, message.citations, onCitationClick, message.isLoading)}
             {message.isLoading && !message.answer && (
               <span className="inline-flex gap-1 pl-1">
-                <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "hsl(var(--primary) / 0.7)", animationDelay: "0ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "hsl(var(--primary) / 0.7)", animationDelay: "150ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "hsl(var(--primary) / 0.7)", animationDelay: "300ms" }} />
               </span>
             )}
           </div>
@@ -178,17 +181,17 @@ function ChatMessageBubble({
           {/* Sources */}
           {!message.isLoading && message.citations.length > 0 && (
             <div className="w-full mt-2 space-y-2 pl-11">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Sources</h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wider font-mono" style={{ color: "rgba(255,255,255,0.35)" }}>Sources</h4>
               <div className="flex flex-wrap gap-2">
                 {message.citations.map((c, i) => (
                   <button
                     key={i}
                     onClick={() => onCitationClick(c)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs border border-border bg-background hover:bg-muted/50 rounded-lg transition-colors text-left max-w-sm overflow-hidden"
+                    className="source-chip"
                   >
-                    <span className="text-primary font-mono flex-shrink-0">[{i + 1}]</span>
-                    <span className="font-medium truncate">{c.section}</span>
-                    {c.page > 0 && <span className="text-muted-foreground flex-shrink-0">p.{c.page}</span>}
+                    <span className="font-mono flex-shrink-0" style={{ color: "hsl(var(--primary))" }}>[{i + 1}]</span>
+                    <span className="font-medium truncate max-w-[140px]">{c.section}</span>
+                    {c.page > 0 && <span style={{ color: "rgba(255,255,255,0.4)" }} className="flex-shrink-0">p.{c.page}</span>}
                   </button>
                 ))}
               </div>
@@ -200,64 +203,50 @@ function ChatMessageBubble({
   );
 }
 
-// ─── Hero / Empty State ──────────────────────────────────────────────────────
+// ─── Hero / Empty State ───────────────────────────────────────────────────────
 
 function HeroEmptyState({ filters, onQuickSelect }: { filters: QueryFilters; onQuickSelect: (q: string) => void }) {
   return (
-    <div className="animate-fade-in w-full flex flex-col items-center justify-center space-y-10 h-full pb-12">
+    <div className="animate-fade-in w-full flex flex-col items-center space-y-8">
 
-      {/* Wordmark + Description */}
-      <div className="text-center space-y-5 max-w-xl">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_20px_rgba(0,255,255,0.15)]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
-              <path d="M22 12a10 10 0 0 0-10-10v10h10z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight font-mono text-foreground">
-            <span className="text-primary">&gt;</span> FinRAG
-          </h1>
-        </div>
-
-        <p className="text-muted-foreground text-base leading-relaxed">
-          A <span className="text-foreground font-medium">citation-enforced</span> financial research assistant over SEC filings.
-          Ask questions about{" "}
-          <span className="text-primary font-mono">10-K</span>,{" "}
-          <span className="text-primary font-mono">10-Q</span>, and{" "}
-          <span className="text-primary font-mono">8-K</span> filings — every answer is grounded in a specific paragraph from the actual document.
+      {/* Logo */}
+      <div className="flex flex-col items-center space-y-3">
+        <FinRAGLogo size="lg" />
+        <p className="text-sm text-center max-w-sm" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+          Citation-enforced financial research over SEC EDGAR filings.
+          Every answer is grounded in a specific paragraph.
         </p>
-
-        <p className="text-muted-foreground/70 text-sm leading-relaxed">
-          When the evidence does not support a claim, FinRAG{" "}
-          <span className="text-foreground/80 italic">refuses to answer</span> rather than hallucinate — because in financial research, accuracy is non-negotiable.
-        </p>
-      </div>
-
-      {/* Divider */}
-      <div className="flex items-center gap-3 w-full max-w-md">
-        <div className="flex-1 h-px bg-border/50" />
-        <span className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Quick Start</span>
-        <div className="flex-1 h-px bg-border/50" />
       </div>
 
       {/* Quick-start cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-xl">
         {[
           { q: "What was total revenue and net income?", icon: "📊", label: "Financials" },
           { q: "What AI-related risk factors were disclosed?", icon: "🛡️", label: "Risk Factors" },
-          { q: "How did operating margin change YoY?", icon: "📈", label: "Margins" },
+          { q: "How did operating margin change year-over-year?", icon: "📈", label: "Margins" },
           { q: "What did management say about future guidance?", icon: "🔮", label: "Outlook" },
         ].map((item, i) => (
           <button
             key={i}
             onClick={() => onQuickSelect(item.q)}
-            className="flex items-start gap-3 p-4 text-left border border-border rounded-xl bg-background hover:bg-muted/40 hover:border-primary/30 transition-all shadow-sm hover:shadow-[0_0_12px_rgba(0,255,255,0.05)] group"
+            className="flex items-start gap-3 p-3.5 text-left rounded-2xl transition-all group"
+            style={{
+              border: "1px solid rgba(255,255,255,0.07)",
+              background: "rgba(255,255,255,0.03)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.07)";
+            }}
           >
-            <span className="text-xl">{item.icon}</span>
+            <span className="text-lg leading-none mt-0.5">{item.icon}</span>
             <div>
-              <div className="text-xs font-mono text-primary/70 mb-0.5 group-hover:text-primary transition-colors">{item.label}</div>
-              <div className="text-sm font-mono text-foreground/80 leading-snug">{item.q}</div>
+              <div className="text-xs font-mono mb-0.5 transition-colors" style={{ color: "hsl(var(--primary))" }}>{item.label}</div>
+              <div className="text-xs leading-snug" style={{ color: "rgba(255,255,255,0.55)" }}>{item.q}</div>
             </div>
           </button>
         ))}
@@ -266,10 +255,136 @@ function HeroEmptyState({ filters, onQuickSelect }: { filters: QueryFilters; onQ
   );
 }
 
-// ─── Main QueryPanel ─────────────────────────────────────────────────────────
+// ─── Grok-style Input Section ─────────────────────────────────────────────────
+
+function InputSection({
+  query, setQuery, textareaRef, handleSubmit, handleKeyDown,
+  handleSummarize, handleReset, isAnyLoading, hasMessages, filters,
+}: {
+  query: string;
+  setQuery: (v: string) => void;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  handleSubmit: () => void;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  handleSummarize: () => void;
+  handleReset: () => void;
+  isAnyLoading: boolean;
+  hasMessages: boolean;
+  filters: QueryFilters;
+}) {
+  return (
+    <div className="w-full max-w-2xl mx-auto space-y-3">
+
+      {/* Action chips row */}
+      <div className="flex items-center gap-2 px-1">
+        <button
+          id="summarize-report-btn"
+          onClick={handleSummarize}
+          disabled={isAnyLoading}
+          title="Summarize the selected report"
+          className="action-chip action-chip-primary"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+          Summarize Report
+        </button>
+
+        {hasMessages && (
+          <button
+            id="clear-chat-btn"
+            onClick={handleReset}
+            disabled={isAnyLoading}
+            title="Clear chat history"
+            className="action-chip ml-auto"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14H6L5 6" />
+              <path d="M10 11v6M14 11v6" />
+              <path d="M9 6V4h6v2" />
+            </svg>
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Pill input bar */}
+      <div className="grok-input-bar flex items-end gap-2 px-4 py-3">
+        {/* Expand/attach icon */}
+        <button
+          className="flex-shrink-0 mb-0.5 transition-colors"
+          style={{ color: "rgba(255,255,255,0.3)" }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.3)")}
+          tabIndex={-1}
+          aria-label="Attach file"
+          title="Attach file (coming soon)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+
+        {/* Textarea */}
+        <textarea
+          ref={textareaRef}
+          id="query-input"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            e.target.style.height = "auto";
+            e.target.style.height = Math.min(e.target.scrollHeight, 140) + "px";
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={`Ask about ${filters.ticker} ${filters.filing_type}…`}
+          disabled={isAnyLoading}
+          rows={1}
+          className="grok-textarea flex-1 max-h-[140px] text-sm leading-relaxed py-0.5"
+          style={{ fontFamily: "var(--font-sans)" }}
+        />
+
+        {/* Submit button */}
+        <button
+          id="submit-query-btn"
+          onClick={() => handleSubmit()}
+          disabled={isAnyLoading || !query.trim()}
+          aria-label="Submit query"
+          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+            query.trim() && !isAnyLoading ? "submit-btn-active" : "submit-btn-inactive"
+          }`}
+        >
+          {isAnyLoading ? (
+            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5" />
+              <polyline points="5 12 12 5 19 12" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Hint */}
+      <p className="text-center text-xs px-2" style={{ color: "rgba(255,255,255,0.2)" }}>
+        Press <kbd className="px-1.5 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>Enter</kbd> to submit · <kbd className="px-1.5 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>Shift+Enter</kbd> for new line
+      </p>
+    </div>
+  );
+}
+
+// ─── Main QueryPanel ──────────────────────────────────────────────────────────
 
 export default function QueryPanel({
-  filters, onCitationClick, pendingQuery, onPendingQueryConsumed, finragState
+  filters, onCitationClick, pendingQuery, onPendingQueryConsumed, finragState,
 }: QueryPanelProps) {
   const { messages, isAnyLoading, submit, reset } = finragState;
 
@@ -286,7 +401,7 @@ export default function QueryPanel({
     }
   }, [pendingQuery, onPendingQueryConsumed]);
 
-  // Auto-scroll to bottom on new messages or streaming updates
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current && messages.length > 0) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -298,11 +413,7 @@ export default function QueryPanel({
     if (!q || isAnyLoading) return;
     submit(q, filters);
     setQuery("");
-
-    // Reset textarea height
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
   }, [query, isAnyLoading, submit, filters]);
 
   const handleSummarize = useCallback(() => {
@@ -327,133 +438,56 @@ export default function QueryPanel({
 
   const hasMessages = messages.length > 0;
 
-  return (
-    <div className="flex-1 flex flex-col h-full relative bg-background">
+  const inputSectionProps = {
+    query, setQuery, textareaRef, handleSubmit, handleKeyDown,
+    handleSummarize, handleReset, isAnyLoading, hasMessages, filters,
+  };
 
-      {/* Scrollable Content Area */}
+  // ── Empty / Hero state: full-height centering, Grok-style ──
+  if (!hasMessages) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center h-full relative px-4 sm:px-6 pb-8" style={{ zIndex: 1 }}>
+        <div className="w-full flex flex-col items-center gap-10 max-w-2xl">
+          <HeroEmptyState
+            filters={filters}
+            onQuickSelect={(q) => {
+              setQuery(q);
+              setTimeout(() => textareaRef.current?.focus(), 0);
+            }}
+          />
+          <InputSection {...inputSectionProps} />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Active chat state: scrollable history + fixed input ──
+  return (
+    <div className="flex-1 flex flex-col h-full relative" style={{ zIndex: 1 }}>
+
+      {/* Scrollable chat history */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 sm:px-8 pt-8 flex flex-col items-center"
+        className="flex-1 overflow-y-auto px-4 sm:px-8 pt-6 pb-2 flex flex-col items-center"
       >
-        <div className="w-full max-w-3xl mx-auto flex flex-col min-h-full">
-
-          {/* Hero Empty State */}
-          {!hasMessages && (
-            <HeroEmptyState
+        <div className="w-full max-w-3xl mx-auto flex flex-col gap-8 pb-4">
+          {messages.map((msg) => (
+            <ChatMessageBubble
+              key={msg.id}
+              message={msg}
               filters={filters}
-              onQuickSelect={(q) => {
-                setQuery(q);
-                setTimeout(() => textareaRef.current?.focus(), 0);
-              }}
+              onCitationClick={onCitationClick}
             />
-          )}
-
-          {/* Sequential Chat History */}
-          {hasMessages && (
-            <div className="flex flex-col gap-8 pb-4">
-              {messages.map((msg) => (
-                <ChatMessageBubble
-                  key={msg.id}
-                  message={msg}
-                  filters={filters}
-                  onCitationClick={onCitationClick}
-                />
-              ))}
-            </div>
-          )}
-
+          ))}
         </div>
-
       </div>
 
-      {/* Fixed Input Area (Flex Item) */}
-      <div className="w-full flex-shrink-0 px-4 sm:px-6 pb-4 sm:pb-6 pt-4 bg-background border-t border-border/10">
-        <div className="max-w-3xl mx-auto space-y-2">
-
-          {/* Action Chips */}
-          <div className="flex items-center gap-2 px-1">
-            <button
-              id="summarize-report-btn"
-              onClick={handleSummarize}
-              disabled={isAnyLoading}
-              title="Summarize the selected report"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded-lg border border-primary/30 bg-primary/5 text-primary hover:bg-primary/15 hover:border-primary/60 hover:shadow-[0_0_10px_rgba(0,255,255,0.15)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
-              Summarize Report
-            </button>
-
-            {hasMessages && (
-              <button
-                id="clear-chat-btn"
-                onClick={handleReset}
-                disabled={isAnyLoading}
-                title="Clear chat history"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded-lg border border-border/50 bg-transparent text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all ml-auto"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6l-1 14H6L5 6" />
-                  <path d="M10 11v6M14 11v6" />
-                  <path d="M9 6V4h6v2" />
-                </svg>
-                Clear Chat
-              </button>
-            )}
-          </div>
-
-          {/* Textarea Input */}
-          <div className="relative shadow-[0_0_20px_rgba(0,255,255,0.04)] border border-border rounded-xl bg-background/80 backdrop-blur-md overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:shadow-[0_0_30px_rgba(0,255,255,0.12)] transition-all">
-            <textarea
-              ref={textareaRef}
-              id="query-input"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                e.target.style.height = "auto";
-                e.target.style.height = Math.min(e.target.scrollHeight, 150) + "px";
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder={`> Ask about ${filters.ticker} ${filters.filing_type}...`}
-              disabled={isAnyLoading}
-              rows={1}
-              className="w-full max-h-[150px] resize-none bg-transparent border-0 py-4 pl-4 pr-16 text-sm font-mono placeholder:text-muted-foreground focus:ring-0 disabled:opacity-50 outline-none"
-            />
-
-            <div className="absolute right-2 bottom-2">
-              <button
-                id="submit-query-btn"
-                onClick={() => handleSubmit()}
-                disabled={isAnyLoading || !query.trim()}
-                aria-label="Submit query"
-                className={`
-                  p-2 rounded-lg flex items-center justify-center transition-all
-                  ${query.trim() && !isAnyLoading
-                    ? "bg-primary text-primary-foreground shadow-[0_0_10px_rgba(0,255,255,0.4)] hover:shadow-[0_0_20px_rgba(0,255,255,0.6)]"
-                    : "bg-muted text-muted-foreground cursor-not-allowed"}
-                `}
-              >
-                {isAnyLoading ? (
-                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Fixed bottom input */}
+      <div
+        className="w-full flex-shrink-0 px-4 sm:px-6 pb-5 pt-3"
+        style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(16px)" }}
+      >
+        <InputSection {...inputSectionProps} />
       </div>
     </div>
   );
