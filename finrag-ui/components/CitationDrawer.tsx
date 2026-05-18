@@ -28,10 +28,9 @@ export default function CitationDrawer({ citation, isOpen, onClose }: CitationDr
         className={`fixed inset-0 bg-background/80 backdrop-blur-sm z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       />
 
-      {/* Drawer */}
       <div
         className={`
-          fixed top-0 right-0 h-full w-full sm:w-[480px] bg-background border-l border-border z-50 shadow-2xl flex flex-col
+          fixed top-0 right-0 h-full w-full sm:w-[480px] bg-background/95 backdrop-blur-xl border-l border-primary/30 z-50 shadow-[-10px_0_30px_rgba(0,255,255,0.05)] flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
@@ -41,9 +40,9 @@ export default function CitationDrawer({ citation, isOpen, onClose }: CitationDr
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border bg-muted/20">
               <div>
-                <h3 className="font-semibold text-lg text-foreground flex items-center gap-2">
-                  {citation.ticker}
-                  <span className="text-xs font-mono font-medium px-2 py-0.5 bg-primary/10 text-primary rounded-md">
+                <h3 className="font-bold text-lg text-foreground flex items-center gap-2 font-mono">
+                  &gt; {citation.ticker}
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 bg-primary/20 text-primary border border-primary/30 rounded">
                     {citation.filing_type}
                   </span>
                 </h3>
@@ -71,11 +70,11 @@ export default function CitationDrawer({ citation, isOpen, onClose }: CitationDr
                   Source Document Excerpt
                 </h4>
                 
-                <div className="relative">
+                <div className="relative group">
                   {/* Left quote border */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-md" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-md shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
                   
-                  <div className="pl-5 py-4 pr-4 bg-muted/30 rounded-r-xl rounded-l-sm border border-border/50 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                  <div className="pl-5 py-4 pr-4 bg-muted/50 rounded-r-xl rounded-l-sm border border-border/50 text-sm leading-relaxed text-foreground whitespace-pre-wrap font-mono">
                     {citation.text}
                   </div>
                 </div>
@@ -106,10 +105,10 @@ export default function CitationDrawer({ citation, isOpen, onClose }: CitationDr
                 className="flex items-center justify-between p-4 rounded-xl border border-border bg-background hover:bg-muted/50 transition-colors group"
               >
                 <div>
-                  <div className="font-medium text-foreground group-hover:text-primary transition-colors">
-                    View on SEC EDGAR
+                  <div className="font-bold text-foreground font-mono uppercase tracking-widest group-hover:text-primary transition-colors">
+                    [ VIEW ON SEC EDGAR ]
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
+                  <div className="text-xs text-muted-foreground mt-0.5 font-mono">
                     Open the original source filing in a new tab.
                   </div>
                 </div>

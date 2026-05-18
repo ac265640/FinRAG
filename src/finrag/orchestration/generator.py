@@ -403,22 +403,8 @@ class RAGGenerator:
                         or err.get("code") == 429
                     )
 
-                    if is_quota_err and quota_attempt < MAX_QUOTA_RETRIES:
-                        # Extract suggested retry delay from message (e.g. "retry in 23.9s")
-                        import re
-                        import time
-                        delay_match = re.search(r"retry in ([\d.]+)s", err_msg, re.IGNORECASE)
-                        wait_secs = float(delay_match.group(1)) if delay_match else 30.0
-                        wait_secs = min(wait_secs + 2, 65)  # Add 2s buffer, cap at 65s
-
-                        logger.warning(
-                            "quota_exceeded_retrying",
-                            attempt=quota_attempt + 1,
-                            wait_secs=wait_secs,
-                            model=self._model_name,
-                        )
-                        time.sleep(wait_secs)
-                        continue  # Retry the curl call
+                    if is_quota_err:
+                        raise ValueError(f"Quota Exceeded: {err_msg}")
 
                     raise ValueError(f"API Error: {err_msg}")
 
@@ -449,12 +435,6 @@ class RAGGenerator:
             except Exception as e:
                 err_str = str(e)
                 is_quota = "quota" in err_str.lower() or "resource_exhausted" in err_str.lower()
-
-                if is_quota and quota_attempt < MAX_QUOTA_RETRIES:
-                    import time
-                    logger.warning("quota_exceeded_retrying", attempt=quota_attempt + 1, wait_secs=35)
-                    time.sleep(35)
-                    continue
 
                 logger.error("llm_call_failed", error=err_str)
                 # Give a user-friendly message for quota errors

@@ -51,7 +51,7 @@ MIN_CITATIONS = 1
 # web passages even when highly relevant. Setting this to 0.01 matches the
 # reranker's own min_relevance floor and prevents over-aggressive declining
 # on legitimate financial queries. Truly irrelevant results still score below 0.01.
-DEFAULT_RELEVANCE_FLOOR = 0.01
+DEFAULT_RELEVANCE_FLOOR = 0.0
 
 
 # --------------------------------------------------------------------------- #

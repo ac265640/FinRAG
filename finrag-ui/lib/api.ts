@@ -234,6 +234,13 @@ function handleNamedEvent(
     const isValid = (data.is_valid as boolean) ?? false;
     const hasAnswer = getAnswer().trim().length > 0;
 
+  // Server-side error
+  if (eventName === "error") {
+    const errorMsg = (data.error as string) ?? "Unknown server error";
+    callbacks.onError(errorMsg);
+    return;
+  }
+
     // Decline on explicit signal, wrong route, or completely empty answer
     const declined =
       isDeclined ||

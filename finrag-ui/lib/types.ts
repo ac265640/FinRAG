@@ -55,3 +55,18 @@ export interface ExampleQuery {
   query: string;
   description: string;
 }
+
+/** A single turn in the sequential chat history. */
+export interface ChatMessage {
+  id: string;
+  query: string;
+  answer: string;
+  citations: Citation[];
+  confidence: number | null;
+  declined: boolean;
+  declineReason: string | null;
+  error: string | null;
+  isLoading: boolean;
+  currentStage: PipelineStage | null;
+  hasResult: boolean;
+}

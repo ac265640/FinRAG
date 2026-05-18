@@ -391,7 +391,9 @@ class EdgarClient:
             Dict mapping section name to extracted text content.
         """
         if filing_type.upper() not in ("10-K", "10-K/A"):
-            # For non-10K filings, return the full text as a single section
+            # For non-10K filings, return the full text as a single section.
+            # Note: for 8-K filings the exhibit (Exhibit 99.1) is fetched separately
+            # in ingest_filing() and merged in before saving.
             soup = BeautifulSoup(raw_content, "lxml")
             text = soup.get_text(separator="\n", strip=True)
             return {"full_text": text}
@@ -454,6 +456,72 @@ class EdgarClient:
             section_names=list(sections.keys()),
         )
         return sections
+
+    async def get_exhibit_urls(
+        self,
+        cik: str,
+        accession_number: str,
+        exhibit_types: list[str] | None = None,
+    ) -> list[tuple[str, str]]:
+        """Fetch the filing index and return URLs of matching exhibits.
+
+        8-K filings store actual content (earnings results, press releases)
+        in Exhibit 99.1 rather than the main document body. This method
+        fetches the filing index page and finds exhibit document URLs.
+
+        Args:
+            cik: SEC CIK number (zero-padded).
+            accession_number: Filing accession number (with dashes).
+            exhibit_types: List of exhibit type strings to find, e.g. ["EX-99.1"].
+                           If None, defaults to ["EX-99.1", "EX-99"].
+
+        Returns:
+            List of (exhibit_type, url) tuples for matching exhibits.
+        """
+        if exhibit_types is None:
+            exhibit_types = ["EX-99.1", "EX-99", "EX-99.2"]
+
+        acc_no_clean = accession_number.replace("-", "")
+        index_url = (
+            f"https://www.sec.gov/Archives/edgar/data/{cik.lstrip('0')}"
+            f"/{acc_no_clean}/{accession_number}-index.htm"
+        )
+
+        logger.info("fetching_filing_index", url=index_url)
+        try:
+            response = await self._request(index_url)
+        except Exception as e:
+            logger.warning("filing_index_unavailable", url=index_url, error=str(e))
+            return []
+
+        soup = BeautifulSoup(response.text, "lxml")
+        results: list[tuple[str, str]] = []
+
+        # Parse the EDGAR filing index table
+        for row in soup.find_all("tr"):
+            cells = row.find_all("td")
+            if len(cells) < 4:
+                continue
+            
+            # Column 3 is the formal document Type (e.g., "EX-99.1", "10-K")
+            doc_type = cells[3].get_text(strip=True).upper()
+            
+            if any(doc_type.startswith(ex.upper()) for ex in exhibit_types):
+                link = cells[2].find("a")
+                if link and link.get("href"):
+                    href = link["href"]
+                    if not href.startswith("http"):
+                        href = "https://www.sec.gov" + href
+                    results.append((doc_type, href))
+                    logger.info("exhibit_found", exhibit_type=doc_type, url=href)
+
+        if not results:
+            logger.warning(
+                "no_exhibits_found",
+                accession_number=accession_number,
+                exhibit_types=exhibit_types,
+            )
+        return results
 
     async def save_filing(
         self,
@@ -519,6 +587,8 @@ async def ingest_filing(
     """High-level ingestion function: fetch, parse, and save filings.
 
     This is the main entry point for the ingestion pipeline.
+    For 8-K filings, also fetches Exhibit 99.1 (press release / earnings
+    update) which contains the actual event content.
 
     Args:
         ticker: Stock ticker symbol (e.g., "AAPL").
@@ -544,8 +614,37 @@ async def ingest_filing(
             )
 
             raw_content = await client.download_filing(filing_meta.primary_document_url)
-
             sections = client.parse_sections(raw_content, filing_type)
+
+            # For 8-K filings: fetch Exhibit 99.1 which contains the actual
+            # event content (press releases, earnings tables, announcements).
+            # The main 8-K body is almost always just a wrapper that says
+            # "see Exhibit 99.1" — without the exhibit, no useful chunks exist.
+            if filing_type.upper() == "8-K":
+                exhibits = await client.get_exhibit_urls(
+                    cik=cik,
+                    accession_number=filing_meta.accession_number,
+                )
+                for exhibit_type, exhibit_url in exhibits:
+                    try:
+                        exhibit_raw = await client.download_filing(exhibit_url)
+                        exhibit_soup = BeautifulSoup(exhibit_raw, "lxml")
+                        exhibit_text = exhibit_soup.get_text(separator="\n", strip=True)
+                        if len(exhibit_text) > 200:  # Skip empty/boilerplate exhibits
+                            section_key = f"exhibit_{exhibit_type.lower().replace('-', '_').replace('.', '_')}"
+                            sections[section_key] = exhibit_text
+                            logger.info(
+                                "exhibit_ingested",
+                                exhibit_type=exhibit_type,
+                                text_length=len(exhibit_text),
+                            )
+                    except Exception as e:
+                        logger.warning(
+                            "exhibit_download_failed",
+                            exhibit_type=exhibit_type,
+                            url=exhibit_url,
+                            error=str(e),
+                        )
 
             parsed = ParsedFiling(
                 metadata=filing_meta,

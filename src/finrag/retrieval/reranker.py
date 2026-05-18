@@ -44,7 +44,7 @@ DEFAULT_TOP_K = 5
 
 # Minimum relevance score (post-sigmoid) to include a result.
 # Below this threshold, chunks are likely irrelevant noise.
-DEFAULT_MIN_RELEVANCE = 0.01
+DEFAULT_MIN_RELEVANCE = 0.0001
 
 
 # --------------------------------------------------------------------------- #

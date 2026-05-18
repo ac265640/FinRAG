@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${ibmPlexMono.variable} antialiased`}
+      className={`${inter.variable} ${ibmPlexMono.variable} antialiased dark`}
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-sans text-foreground">
