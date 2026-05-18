@@ -424,6 +424,7 @@ class FinRAGTracer:
         if self._ensure_client() and self._client:
             try:
                 trace = self._client.trace(
+                    id=trace_ctx["trace_id"],
                     name="finrag_query",
                     session_id=session_id or None,
                     input={"query": query},
@@ -728,4 +729,5 @@ def instrument_pipeline_result(
         )
 
     summary = tracer.end_trace(trace_ctx, result=result)
+    tracer.flush()
     return summary

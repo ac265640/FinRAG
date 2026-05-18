@@ -393,6 +393,14 @@ async def query_stream_endpoint(
             metadata_filter=body.metadata_filter,
         )
 
+        # Instrument trace for the streaming endpoint
+        instrument_pipeline_result(
+            result=result,
+            request_id=request_id,
+            session_id=session_id,
+            query=body.query,
+        )
+
         # Determine is_valid for the frontend:
         # - A real answer with citations = valid (even if enforcement had minor issues)
         # - route == "decline" or "stub" with empty answer = not valid
