@@ -44,3 +44,9 @@ DEBT_LEDGER.md
 CONTRIBUTING.md
 .claude/
 
+# Sensitive/Internal files
+claude-token-efficient
+claude_handoff.md
+instructions.txt
+ui.txt
+
