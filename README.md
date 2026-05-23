@@ -15,7 +15,7 @@ FinRAG answers questions about SEC filings (10-K, 10-Q, 8-K) and earnings call t
 ### Key Capabilities
 
 - **Citation-enforced answers** — every claim maps to a source chunk with filing reference, section, and page
-- **Hybrid retrieval** — BM25 sparse + dense vector search fused with Reciprocal Rank Fusion
+- **Hybrid retrieval** — BM25  sparse + dense vector search fused with Reciprocal Rank Fusion
 - **Cross-encoder reranking** — precision-focused second-stage reranking
 - **Multi-turn conversations** — entity tracking, reference resolution, session memory
 - **Guardrails** — prompt injection detection, PII filtering, output validation
