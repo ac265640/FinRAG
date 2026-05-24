@@ -26,7 +26,7 @@ FinRAG answers questions about SEC filings (10-K, 10-Q, 8-K) and earnings call t
 
 ---
 
-##  Architecture
+##   Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
