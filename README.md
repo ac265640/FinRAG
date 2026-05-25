@@ -1,18 +1,7 @@
----
-title: FinRAG
-emoji: 📈
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # FinRAG
 
-> A production-grade, citation-enforced financial research assistant over SEC filings and earnings call transcripts.
+> A production-grade, citation-enforced financial RAG system integrating state-of-the-art AI orchestration with robust enterprise software engineering.
 
-[![Quality Gate](https://github.com/ac265640/FinRAG/actions/workflows/quality-gate.yml/badge.svg)](https://github.com/ac265640/FinRAG/actions/workflows/quality-gate.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Live Platform](https://img.shields.io/badge/Live%20Platform-Vercel-000000?style=flat&logo=vercel)](https://fin-rag-five.vercel.app)
@@ -23,24 +12,24 @@ pinned: false
 
 ## What This Does
 
-FinRAG answers questions about SEC filings (10-K, 10-Q, 8-K) and earnings call transcripts. Every answer is grounded in a specific paragraph from a specific filing, with company, period, section, and page attached. When evidence doesn't support a claim, the system **refuses to answer** rather than hallucinate.
+FinRAG is an enterprise-grade financial research engine designed to query SEC filings (10-K, 10-Q, 8-K) and earnings call transcripts. It leverages advanced LLM reasoning to generate answers that are 100% grounded in source text, enforcing exact citations (company, filing period, section, and page). To eliminate hallucination, the system executes an automated refusal protocol if the evidence is insufficient.
 
 ### Key Capabilities
 
-- **Citation-enforced answers** — every claim maps to a source chunk with filing reference, section, and page.
-- **Hybrid retrieval** — BM25 sparse + dense vector search fused with Reciprocal Rank Fusion.
-- **Cross-encoder reranking** — precision-focused second-stage reranking.
-- **Multi-turn conversations** — entity tracking, reference resolution, session memory.
-- **Guardrails** — prompt injection detection, PII filtering, output validation.
+- **LangGraph Orchestration** — Multi-agent state machine routing requests based on query intent and complexity.
+- **Hybrid Retrieval (RRF)** — Fusing BM25 sparse search and dense sentence embeddings via Reciprocal Rank Fusion.
+- **Cross-Encoder Reranking** — Second-stage transformer validation for precision retrieval.
+- **Multi-turn Session Memory** — Thread-safe session tracking, coreference resolution, and entity memory.
+- **Automated LLM-as-a-Judge** — Real-time generation evaluation scoring citation accuracy and faithfulness.
+- **Containerized Stack (Docker)** — Multi-container local orchestration (Next.js frontend, FastAPI backend, Redis, PostgreSQL).
+- **Sub-Millisecond Caching (Redis)** — Ultra-fast caching for frequent prompt/response pairs.
+- **Query Analytics Engine (PostgreSQL)** — Persistent SQL logging tracking token costs, latency distribution, and evaluation metrics.
+- **Asynchronous Jobs (Async Tasks)** — FastAPI background task workers for parallel filing downloads, section-aware chunking, and vector indexing.
+- **API Rate Limiting** — Bulletproof client rate-limiting protection.
+- **Structured Logging** — Standardized, production-grade JSON logging for observability and error tracing.
 - **Streaming API** — Server-Sent Events for progressive UI rendering.
-- **Distributed tracing** — Langfuse integration with per-request cost tracking.
-- **Automated evaluation** — 50-item golden dataset, RAGAS metrics, LLM-as-Judge citation scoring.
-- **CI quality gates** — builds fail if faithfulness < 0.85 or citation coverage < 0.90.
-- **Redis Caching** — sub-millisecond query responses for repeated or cached questions.
-- **PostgreSQL Analytics** — persistent DB logging for tracking queries, token costs, evaluation scores, and feedback.
-- **Async Background Ingestion** — FastAPI background tasks for SEC EDGAR filing downloads and parallel vector index building.
-- **Modern Next.js UI** — a gorgeous, reactive chat interface supporting Markdown, citation highlights, and real-time streaming.
-- **Multi-Container Stack** — production-ready Docker Compose orchestration for all microservices.
+- **Guardrails** — Prompt injection detection, PII filtering, and output verification.
+- **CI Quality Gates** — Automated testing builds failing if faithfulness < 0.85 or citation coverage < 0.90.
 
 ---
 
@@ -336,7 +325,6 @@ FinRAG/
 ├── tests/                     # 16 test modules, 300+ tests
 ├── docker-compose.yml         # Local microservice container orchestration
 ├── Dockerfile                 # Backend FastAPI space configuration
-├── ROADMAP.md                 # 15-day build roadmap
 ├── DEBT_LEDGER.md             # Technical debt tracking
 └── pyproject.toml             # Dependencies and tooling config
 ```
@@ -378,22 +366,6 @@ ruff format src/ tests/
 | `FINRAG_API_KEY` | No | Secret bearer security token required for production API authorization |
 | `FINRAG_INIT_PIPELINE` | No | Set `false` to skip backend model pipeline initialization during testing |
 | `FINRAG_CORS_ORIGINS` | No | Comma-separated list or JSON array defining allowed CORS request origins |
-
----
-
-## Build Timeline
-
-This project was built in 15 days following a structured roadmap:
-
-| Phase | Days | Focus |
-|-------|------|-------|
-| Foundation | 1–3 | EDGAR ingestion, chunking, vector store |
-| Retrieval | 4–6 | BM25, hybrid fusion, cross-encoder reranking |
-| Generation & Safety | 7–10 | LangGraph, citations, guardrails, memory |
-| API & Observability | 11–12 | FastAPI, SSE, Langfuse tracing |
-| Evaluation & CI | 13–15 | Golden dataset, RAGAS, LLM-as-Judge, CI gates |
-
-See [ROADMAP.md](ROADMAP.md) for full details and [DEBT_LEDGER.md](DEBT_LEDGER.md) for known technical debt.
 
 ---
 
