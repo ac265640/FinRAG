@@ -34,9 +34,7 @@ RUN chown -R finrag:finrag /app
 USER finrag
 
 EXPOSE 8000
+EXPOSE 7860
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s \
-  CMD curl -f http://localhost:8000/healthz || exit 1
-
-# Note: uvicorn command adjusted based on app.py providing a factory
-CMD ["uvicorn", "finrag.api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+# Dynamically bind to the port provided by the cloud platform (like HF Spaces) or default to 8000
+CMD ["sh", "-c", "uvicorn finrag.api.app:create_app --factory --host 0.0.0.0 --port ${PORT:-8000}"]
