@@ -157,7 +157,8 @@ function runLiveStream(
             callbacks,
             accumulatedCitations,
             (token) => { accumulatedAnswer += token; },
-            () => accumulatedAnswer
+            () => accumulatedAnswer,
+            filters.filing_type
           );
         }
       }
@@ -186,7 +187,8 @@ function handleNamedEvent(
   callbacks: StreamCallbacks,
   accumulatedCitations: Citation[],
   appendToken: (t: string) => void,
-  getAnswer: () => string
+  getAnswer: () => string,
+  filingType: string = ""
 ): void {
   // Pipeline stage events
   if (eventName in STAGE_MAP) {
@@ -257,7 +259,16 @@ function handleNamedEvent(
       } else if (route === "decline") {
         reason = "This question is outside the scope of SEC filing research (e.g. investment advice, stock predictions). Try asking about specific financial figures, risk factors, or disclosures from the filing.";
       } else if (!hasAnswer) {
-        reason = "The selected filing doesn't appear to contain information relevant to your question. This is common for 8-K filings that cover a specific event (e.g. a debt issuance) rather than financial results. Try selecting a different filing date or filing type.";
+        const ft = (filingType || "this").toUpperCase();
+        if (ft === "8-K") {
+          reason = "The selected 8-K filing covers a single corporate event (e.g. a debt issuance or press release) and may not contain the financial detail you're looking for. Try selecting a 10-K or 10-Q filing instead.";
+        } else if (ft === "10-K") {
+          reason = "FinRAG could not find sufficient cited evidence in this 10-K annual report to answer your question. The filing may not contain this specific data point, or try rephrasing your question with more specific financial terms.";
+        } else if (ft === "10-Q") {
+          reason = "FinRAG could not find sufficient cited evidence in this 10-Q quarterly report to answer your question. Try asking about specific revenue, income, or segment figures from this quarter.";
+        } else {
+          reason = `FinRAG could not find sufficient cited evidence in this ${ft} filing to answer your question. Try rephrasing or selecting a different filing.`;
+        }
       } else {
         reason = "No relevant data found for this filing. Try a different company, filing type, or date.";
       }

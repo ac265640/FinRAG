@@ -535,14 +535,37 @@ async def query_stream_endpoint(
         }
 
         answer = result.get("answer", "")
-        chunk_size = 80
-        for i in range(0, max(len(answer), 1), chunk_size):
-            chunk = answer[i : i + chunk_size]
+        logger.info(
+            "stream_answer_preview",
+            answer_len=len(answer),
+            answer_preview=answer[:120] if answer else "<empty>",
+            route=result.get("route", "unknown"),
+            citations_count=len(result.get("citations", [])),
+        )
+
+        # Detect quota/rate-limit answers and surface them as proper errors
+        # instead of silently empty answers that trigger "Insufficient Evidence"
+        _answer_lower = answer.lower()
+        _is_quota_answer = any(kw in _answer_lower for kw in (
+            "rate-limited", "quota exceeded", "resource_exhausted",
+            "generation failed: missing api key", "generation failed after retries",
+        ))
+        if _is_quota_answer:
             yield {
-                "event": "answer_chunk",
-                "data": json.dumps({"text": chunk, "index": i // chunk_size}),
+                "event": "error",
+                "data": json.dumps({"error": answer}),
             }
-            await asyncio.sleep(0.02)
+            return
+
+        chunk_size = 80
+        if answer:  # Only send chunks if there is actual content
+            for i in range(0, len(answer), chunk_size):
+                chunk = answer[i : i + chunk_size]
+                yield {
+                    "event": "answer_chunk",
+                    "data": json.dumps({"text": chunk, "index": i // chunk_size}),
+                }
+                await asyncio.sleep(0.02)
 
         citations = result.get("citations", [])
         for c in citations:

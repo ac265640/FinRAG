@@ -312,12 +312,36 @@ class RAGGenerator:
                 )
                 return answer, True, []
 
-        # Both attempts failed
+        # Both attempts failed — but if we have a real answer, still return it.
+        # The node will mark enforcement_passed=False so the frontend can show
+        # a lower confidence, but we don't silently blank the answer.
         logger.warning(
             "generation_enforcement_failed",
             errors=enforcement.errors,
             hallucinated_ids=enforcement.hallucinated_ids,
+            has_answer=bool(answer.answer_text.strip()),
         )
+
+        # If the answer is non-empty and not an error message, keep it.
+        # Only replace with a decline if the answer itself is blank/error.
+        error_indicators = (
+            "generation failed",
+            "rate-limited",
+            "api error",
+            "missing api key",
+        )
+        answer_lower = answer.answer_text.lower()
+        is_error_answer = any(ind in answer_lower for ind in error_indicators)
+
+        if answer.answer_text.strip() and not is_error_answer:
+            # Real answer exists — return it with enforcement flag
+            logger.info(
+                "generation_returning_despite_enforcement_failure",
+                answer_len=len(answer.answer_text),
+                citations=len(answer.citations),
+            )
+            return answer, False, enforcement.errors
+
         return answer, False, enforcement.errors
 
     def _call_llm(
