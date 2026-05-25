@@ -149,7 +149,17 @@ async def lifespan(app: FastAPI):
                 bm25_index=bm25_index,
             )
             reranker = CrossEncoderReranker()
-            rag_generator = RAGGenerator()
+            
+            # Use active prompt config to initialize RAGGenerator
+            gen_config = getattr(app.state, "gen_config", None)
+            if gen_config:
+                rag_generator = RAGGenerator(
+                    model_name=gen_config.model.name,
+                    temperature=gen_config.model.temperature,
+                    max_retries=gen_config.model.max_retries,
+                )
+            else:
+                rag_generator = RAGGenerator()
 
             app.state.compiled_graph = compile_rag_graph(
                 hybrid_retriever=hybrid_retriever,

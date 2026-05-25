@@ -80,7 +80,7 @@ export function useFinRAGQuery(): UseFinRAGQueryReturn {
           citations: response.citations?.length ? response.citations : m.citations,
           confidence: response.confidence,
           declined: response.declined,
-          declineReason: response.decline_reason,
+          declineReason: m.declineReason || response.decline_reason,
           hasResult: true,
           error: null,
         }));

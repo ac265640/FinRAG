@@ -86,11 +86,9 @@ def retrieve(
             # For summarization: fetch broadly across all major filing sections
             # Use specific sub-queries that cover the full scope of a filing
             summary_queries = [
-                "revenue net income earnings financial results",
-                "business operations products services segments",
-                "risk factors challenges uncertainties",
-                "management outlook guidance future plans",
-                "cash flow balance sheet assets liabilities",
+                "revenue net income earnings financial results business operations segments",
+                "risk factors challenges uncertainties management outlook guidance",
+                "cash flow balance sheet assets liabilities capital expenditure",
             ]
             seen_ids: set = set()
             all_chunks: list = []
