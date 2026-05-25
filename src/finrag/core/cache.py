@@ -24,7 +24,10 @@ class RedisCache:
     def client(self):
         """Lazy initialization of the Redis client."""
         if self._client is None:
-            self._client = redis.from_url(self.redis_url, decode_responses=True)
+            url = self.redis_url
+            if url and url.startswith("redis://") and "upstash.io" in url:
+                url = url.replace("redis://", "rediss://", 1)
+            self._client = redis.from_url(url, decode_responses=True)
         return self._client
 
     def _make_key(self, query: str, filters: dict | None) -> str:
