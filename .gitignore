@@ -28,7 +28,10 @@ htmlcov/
 .coverage
 
 # Data (raw filings are large, not committed)
-data/
+data/*
+!data/raw/
+!data/chroma/
+
 
 # OS
 .DS_Store
