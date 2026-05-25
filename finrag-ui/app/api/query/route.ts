@@ -9,7 +9,8 @@
 
 import { NextRequest } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8002";
+const rawBackendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8002";
+const BACKEND_URL = rawBackendUrl.endsWith("/") ? rawBackendUrl.slice(0, -1) : rawBackendUrl;
 const BACKEND_API_KEY = process.env.BACKEND_API_KEY || process.env.NEXT_PUBLIC_API_KEY || "";
 
 export const runtime = "nodejs";

@@ -14,7 +14,8 @@ const MOCK_MODE = false;
 
 export async function checkHealth(): Promise<boolean> {
   try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8002";
+    const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8002";
+    const API_URL = rawApiUrl.endsWith("/") ? rawApiUrl.slice(0, -1) : rawApiUrl;
     const res = await fetch(`${API_URL}/healthz`, {
       signal: AbortSignal.timeout(5000),
     });
