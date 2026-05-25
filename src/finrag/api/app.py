@@ -20,7 +20,18 @@ Usage:
 """
 
 import os
+import pathlib
 from contextlib import asynccontextmanager
+
+# Load .env from project root before anything else reads env vars.
+# override=False means real environment variables always win over .env values.
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _env_path = pathlib.Path(__file__).parent.parent.parent.parent / ".env"
+    if _env_path.exists():
+        _load_dotenv(dotenv_path=_env_path, override=False)
+except ImportError:
+    pass  # python-dotenv not installed — rely on environment variables
 
 import structlog
 from fastapi import FastAPI, Request
@@ -45,6 +56,7 @@ from finrag.core.middleware import RequestIDMiddleware as CoreRequestIDMiddlewar
 from finrag.core.logging import configure_logging
 
 configure_logging(os.getenv("LOG_LEVEL", "INFO"))
+
 
 logger = structlog.get_logger(__name__)
 
