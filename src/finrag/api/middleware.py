@@ -36,7 +36,7 @@ from starlette.responses import JSONResponse, Response
 
 logger = structlog.get_logger(__name__)
 
-SKIP_AUTH_PATHS = {"/healthz", "/docs", "/openapi.json", "/redoc"}
+SKIP_AUTH_PATHS = {"/", "/healthz", "/docs", "/openapi.json", "/redoc"}
 
 
 # --------------------------------------------------------------------------- #
