@@ -36,5 +36,6 @@ USER finrag
 EXPOSE 8000
 EXPOSE 7860
 
-# Dynamically bind to the port provided by the cloud platform (like HF Spaces) or default to 8000
-CMD ["sh", "-c", "uvicorn finrag.api.app:create_app --factory --host 0.0.0.0 --port ${PORT:-8000}"]
+# Dynamically bind to the port provided by the cloud platform (like HF Spaces) or default to 7860
+CMD ["sh", "-c", "uvicorn finrag.api.app:create_app --factory --host 0.0.0.0 --port ${PORT:-7860}"]
+
