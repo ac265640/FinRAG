@@ -12,9 +12,12 @@ pinned: false
 
 > A production-grade, citation-enforced financial research assistant over SEC filings and earnings call transcripts.
 
-[![Quality Gate](https://github.com/MetaFazer/Finrag/actions/workflows/quality-gate.yml/badge.svg)](https://github.com/MetaFazer/Finrag/actions/workflows/quality-gate.yml)
+[![Quality Gate](https://github.com/ac265640/FinRAG/actions/workflows/quality-gate.yml/badge.svg)](https://github.com/ac265640/FinRAG/actions/workflows/quality-gate.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Live Platform](https://img.shields.io/badge/Live%20Platform-Vercel-000000?style=flat&logo=vercel)](https://fin-rag-five.vercel.app)
+
+**🌐 Live Platform:** [fin-rag-five.vercel.app](https://fin-rag-five.vercel.app)
 
 ---
 
@@ -24,15 +27,20 @@ FinRAG answers questions about SEC filings (10-K, 10-Q, 8-K) and earnings call t
 
 ### Key Capabilities
 
-- **Citation-enforced answers** — every claim maps to a source chunk with filing reference, section, and page
-- **Hybrid retrieval** — BM25  sparse + dense vector search fused with Reciprocal Rank Fusion
-- **Cross-encoder reranking** — precision-focused second-stage reranking
-- **Multi-turn conversations** — entity tracking, reference resolution, session memory
-- **Guardrails** — prompt injection detection, PII filtering, output validation
-- **Streaming API** — Server-Sent Events for progressive UI rendering
-- **Distributed tracing** — Langfuse integration with per-request cost tracking
-- **Automated evaluation** — 50-item golden dataset, RAGAS metrics, LLM-as-Judge citation scoring
-- **CI quality gates** — builds fail if faithfulness < 0.85 or citation coverage < 0.90
+- **Citation-enforced answers** — every claim maps to a source chunk with filing reference, section, and page.
+- **Hybrid retrieval** — BM25 sparse + dense vector search fused with Reciprocal Rank Fusion.
+- **Cross-encoder reranking** — precision-focused second-stage reranking.
+- **Multi-turn conversations** — entity tracking, reference resolution, session memory.
+- **Guardrails** — prompt injection detection, PII filtering, output validation.
+- **Streaming API** — Server-Sent Events for progressive UI rendering.
+- **Distributed tracing** — Langfuse integration with per-request cost tracking.
+- **Automated evaluation** — 50-item golden dataset, RAGAS metrics, LLM-as-Judge citation scoring.
+- **CI quality gates** — builds fail if faithfulness < 0.85 or citation coverage < 0.90.
+- **Redis Caching** — sub-millisecond query responses for repeated or cached questions.
+- **PostgreSQL Analytics** — persistent DB logging for tracking queries, token costs, evaluation scores, and feedback.
+- **Async Background Ingestion** — FastAPI background tasks for SEC EDGAR filing downloads and parallel vector index building.
+- **Modern Next.js UI** — a gorgeous, reactive chat interface supporting Markdown, citation highlights, and real-time streaming.
+- **Multi-Container Stack** — production-ready Docker Compose orchestration for all microservices.
 
 ---
 
@@ -89,11 +97,15 @@ FinRAG answers questions about SEC filings (10-K, 10-Q, 8-K) and earnings call t
 | Reranking | Cross-encoder (`ms-marco-MiniLM-L-6-v2`) |
 | Generation | Google Gemini 2.0 Flash via `langchain-google-genai` |
 | API | FastAPI + SSE (`sse-starlette`) |
+| Caching | Redis (sub-millisecond prompt/response cache & rate limiting) |
+| Analytics Database | PostgreSQL / Neon DB (via SQLAlchemy & asyncpg) |
+| Frontend UI | Next.js (React, TypeScript, TailwindCSS) |
 | Guardrails | Custom regex + policy-based input/output guards |
 | Observability | Langfuse (traces, spans, token costs) |
 | Evaluation | RAGAS metrics + LLM-as-Judge citation scorer |
 | Config | `pydantic-settings` + versioned YAML prompts |
 | CI | GitHub Actions (lint → test → eval gate) |
+| Infrastructure | Docker & Docker Compose (multi-container local orchestration) |
 
 ---
 
@@ -103,13 +115,29 @@ FinRAG answers questions about SEC filings (10-K, 10-Q, 8-K) and earnings call t
 
 - Python 3.11+
 - Google API key (for Gemini LLM)
+- Docker & Docker Compose (optional, but highly recommended for complete multi-container setup)
 
-### Installation
+### Option 1: Docker Compose (Quickest & Recommended)
+
+Run the entire stack (Next.js UI, FastAPI Backend, Redis prompt cache, and PostgreSQL analytics) with a single command:
 
 ```bash
 # Clone the repo
-git clone https://github.com/MetaFazer/Finrag.git
-cd finrag
+git clone https://github.com/ac265640/FinRAG.git
+cd FinRAG
+
+# Spin up all containers
+docker-compose up --build
+```
+
+Make sure to edit the `.env` file generated in the project root with your credentials.
+
+### Option 2: Local Virtual Environment Installation
+
+```bash
+# Clone the repo
+git clone https://github.com/ac265640/FinRAG.git
+cd FinRAG
 
 # Create virtual environment
 python -m venv .venv
@@ -195,6 +223,10 @@ curl http://localhost:8000/api/v1/metrics
 | `/api/v1/sessions/{id}` | DELETE | Clear a session |
 | `/api/v1/config/prompts` | GET | Active prompt versions |
 | `/api/v1/metrics` | GET | Production metrics (p50/p95 latency, costs, rates) |
+| `/api/v1/available-filings` | GET | List processed filing details dynamically (companies, periods, types) |
+| `/api/v1/ingest` | POST | Queue asynchronous background SEC filing download and vector storage |
+| `/api/v1/ingest/{id}/status` | GET | Check async background ingestion progress status |
+| `/api/v1/analytics/queries` | GET | Fetch query history, cost trackers, and performance metrics |
 
 ### Query Request
 
@@ -277,10 +309,19 @@ Builds fail if quality thresholds are not met.
 ## Project Structure
 
 ```
-finrag/
-├── .github/workflows/        # CI quality gate
+FinRAG/
+├── .github/workflows/         # CI quality gate
 │   └── quality-gate.yml
-├── configs/                   # Versioned prompt configs (YAML)
+├── alembic/                   # PostgreSQL migration scripts & schema env
+├── configs/                    # Versioned prompt configs (YAML)
+├── data/                      # SEC filing database storage
+│   ├── chroma/                # ChromaDB SQLite3 persistence database
+│   └── raw/                   # SEC raw filing HTML files grouped by ticker
+├── finrag-ui/                 # Next.js 14 frontend interactive application
+│   ├── app/                   # App Router pages and analytics charts
+│   ├── components/            # Chat component, citations highlight, sidebar
+│   ├── lib/                   # API clients, types, and analytics helpers
+│   └── Dockerfile.frontend    # Frontend Docker image configuration
 ├── scripts/
 │   └── ingest.py              # EDGAR ingestion CLI
 ├── src/finrag/
@@ -293,6 +334,8 @@ finrag/
 │   ├── observability/         # Langfuse tracer, metrics
 │   └── evaluation/            # Golden dataset, RAGAS, LLM-as-Judge
 ├── tests/                     # 16 test modules, 300+ tests
+├── docker-compose.yml         # Local microservice container orchestration
+├── Dockerfile                 # Backend FastAPI space configuration
 ├── ROADMAP.md                 # 15-day build roadmap
 ├── DEBT_LEDGER.md             # Technical debt tracking
 └── pyproject.toml             # Dependencies and tooling config
@@ -326,11 +369,15 @@ ruff format src/ tests/
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GOOGLE_API_KEY` | Yes | Google Gemini API key |
-| `LANGFUSE_PUBLIC_KEY` | No | Langfuse tracing (public key) |
-| `LANGFUSE_SECRET_KEY` | No | Langfuse tracing (secret key) |
-| `FINRAG_API_KEY` | No | API bearer token authentication |
-| `FINRAG_INIT_PIPELINE` | No | Set `false` to skip pipeline init (testing) |
+| `GOOGLE_API_KEY` | Yes | Google Gemini API key (for embedding and answer generation) |
+| `EDGAR_USER_AGENT` | Yes | SEC EDGAR required user agent string (e.g. `Company info@company.com`) |
+| `DATABASE_URL` | Yes | PostgreSQL connection URL for logging query analytic stats |
+| `REDIS_URL` | No | Redis connection URL for sub-millisecond API response caching |
+| `LANGFUSE_PUBLIC_KEY` | No | Langfuse observability metrics dashboard public identifier key |
+| `LANGFUSE_SECRET_KEY` | No | Langfuse observability metrics dashboard secret developer key |
+| `FINRAG_API_KEY` | No | Secret bearer security token required for production API authorization |
+| `FINRAG_INIT_PIPELINE` | No | Set `false` to skip backend model pipeline initialization during testing |
+| `FINRAG_CORS_ORIGINS` | No | Comma-separated list or JSON array defining allowed CORS request origins |
 
 ---
 

@@ -54,3 +54,19 @@ claude_handoff.md
 instructions.txt
 ui.txt
 
+# Local Helper Scripts & Temp validation texts
+scratch_space_api.json
+scripts/set_hf_secrets.py
+scripts/delete_hf_vars.py
+scripts/check_space_status.py
+scripts/get_hf_logs.py
+scripts/poll_space_build.py
+scripts/try_logs_public.py
+scripts/check_neon_data.py
+scripts/upload_to_hf.py
+newadd_validate.txt
+newvalid.txt
+backend_add.txt
+backend.log
+
+
