@@ -61,13 +61,26 @@ async def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    ini_section = config.get_section(config.config_ini_section, {})
-    ini_section["sqlalchemy.url"] = os.environ.get("DATABASE_URL", "")
+    url = os.environ.get("DATABASE_URL", "")
+    
+    import urllib.parse
+    connect_args = {}
+    if "sslmode=" in url:
+        parsed = urllib.parse.urlparse(url)
+        query_params = urllib.parse.parse_qs(parsed.query)
+        query_params.pop("sslmode", None)
+        new_query = urllib.parse.urlencode(query_params, doseq=True)
+        parsed = parsed._replace(query=new_query)
+        url = urllib.parse.urlunparse(parsed)
+        connect_args["ssl"] = True
+    elif "neon.tech" in url:
+        connect_args["ssl"] = True
 
-    connectable = async_engine_from_config(
-        ini_section,
-        prefix="sqlalchemy.",
+    from sqlalchemy.ext.asyncio import create_async_engine
+    connectable = create_async_engine(
+        url,
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     async with connectable.connect() as connection:
