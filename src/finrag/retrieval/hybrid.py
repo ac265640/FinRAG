@@ -329,6 +329,13 @@ class HybridRetriever:
         if not query.strip():
             return []
 
+        # Normalize 'filing_type' parameter to internal metadata field 'form_type'
+        if where:
+            # We copy where to avoid modifying original dict in place if reused
+            where = where.copy()
+            if "filing_type" in where:
+                where["form_type"] = where.pop("filing_type")
+
         # Convert flat where filter to ChromaDB $and syntax if needed
         if where and len(where) > 1 and "$and" not in where and "$or" not in where:
             where = {"$and": [{k: v} for k, v in where.items()]}

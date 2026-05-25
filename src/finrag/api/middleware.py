@@ -107,22 +107,31 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         if not self.api_key:
+            request.state.api_key = ""
             return await call_next(request)
 
+        token = None
         auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+        else:
+            x_api_key = request.headers.get("X-API-Key", "")
+            if x_api_key:
+                token = x_api_key
+
+        if not token:
             return JSONResponse(
                 status_code=401,
-                content={"detail": "Missing or invalid Authorization header. Use: Bearer <token>"},
+                content={"detail": "Missing or invalid API key. Use: Bearer <token> in Authorization header or X-API-Key header"},
             )
 
-        token = auth_header[7:]
         if token != self.api_key:
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Invalid API key"},
             )
 
+        request.state.api_key = token
         return await call_next(request)
 
 

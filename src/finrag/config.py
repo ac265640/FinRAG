@@ -55,6 +55,14 @@ class Settings(BaseSettings):
         default=10,
         description="Max requests per second to EDGAR. SEC limit is 10.",
     )
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        description="Redis connection URL for caching",
+    )
+    cache_ttl_seconds: int = Field(
+        default=3600,
+        description="Cache Time-To-Live in seconds",
+    )
 
     @field_validator("edgar_user_agent")
     @classmethod

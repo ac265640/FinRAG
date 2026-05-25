@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+!.env.example
+data/chroma/
+data/raw/
+.git/
+.github/
+tests/
+*.md
+.pytest_cache/
+htmlcov/
+.coverage

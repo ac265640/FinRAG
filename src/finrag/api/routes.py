@@ -23,17 +23,74 @@ Debt: DAY-11-002 -- SSE simulates chunking of final answer. True
 import asyncio
 import json
 import uuid
+import time
+import hashlib
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, BackgroundTasks
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
+from finrag.api.dependencies import get_redis_cache
+from finrag.core.cache import RedisCache
 from finrag.observability.langfuse_tracer import instrument_pipeline_result, metrics
 from finrag.orchestration.memory import SessionStore
 from finrag.orchestration.prompt_config import get_active_prompt_version
 
+import os
+from finrag.api.limiter import limiter
+
 logger = structlog.get_logger(__name__)
+
+
+def hash_api_key(api_key: str) -> str:
+    """Helper to return SHA256 of the API key for secure storage."""
+    return hashlib.sha256(api_key.encode("utf-8")).hexdigest()
+
+
+async def log_query(
+    api_key_hash: str,
+    query_text: str,
+    ticker: str | None,
+    filing_type: str | None,
+    fiscal_period: str | None,
+    confidence_score: float | None,
+    response_time_ms: int,
+    was_declined: bool,
+    cache_hit: bool,
+    chunk_count: int | None,
+) -> None:
+    """Background task to asynchronously record query logs and upsert session stats."""
+    from finrag.database.connection import AsyncSessionLocal
+    from finrag.database.repository import QueryLogRepository, SessionRepository
+
+    try:
+        async with AsyncSessionLocal() as db:
+            log_repo = QueryLogRepository()
+            await log_repo.create_log(
+                session=db,
+                api_key_hash=api_key_hash,
+                query_text=query_text,
+                ticker=ticker,
+                filing_type=filing_type,
+                fiscal_period=fiscal_period,
+                confidence_score=confidence_score,
+                response_time_ms=response_time_ms,
+                was_declined=was_declined,
+                cache_hit=cache_hit,
+                chunk_count=chunk_count,
+            )
+
+            session_repo = SessionRepository()
+            await session_repo.upsert_session(
+                session=db,
+                api_key_hash=api_key_hash,
+            )
+            await db.commit()
+            logger.info("db_query_log_success", api_key_hash=api_key_hash[:8])
+    except Exception as e:
+        logger.error("db_query_log_failed", error=str(e))
+
 
 
 # --------------------------------------------------------------------------- #
@@ -62,8 +119,13 @@ class QueryRequest(BaseModel):
     )
     metadata_filter: dict | None = Field(
         default=None,
+        alias="filters",
         description="Metadata filter for retrieval, e.g. {ticker: AAPL}",
     )
+
+    model_config = {
+        "populate_by_name": True
+    }
 
 
 class CitationResponse(BaseModel):
@@ -104,6 +166,7 @@ class QueryResponse(BaseModel):
     route: str = ""
     prompt_version: str = ""
     metadata: dict = {}
+    cached: bool = False
 
 
 class SessionResponse(BaseModel):
@@ -168,11 +231,15 @@ def get_compiled_graph(request: Request):
 
 
 @router.post("/query", response_model=QueryResponse)
+@limiter.limit(os.getenv("RATE_LIMIT_PER_MINUTE", "10") + "/minute")
 async def query_endpoint(
     body: QueryRequest,
     request: Request,
+    response: Response,
+    background_tasks: BackgroundTasks,
     session_store: SessionStore = Depends(get_session_store),
     compiled_graph=Depends(get_compiled_graph),
+    cache: RedisCache = Depends(get_redis_cache),
 ) -> QueryResponse:
     """Run a financial research query through the RAG pipeline.
 
@@ -182,12 +249,16 @@ async def query_endpoint(
     Args:
         body: Query request body.
         request: HTTP request.
+        response: HTTP response.
+        background_tasks: Background tasks orchestrator.
         session_store: Shared session store.
         compiled_graph: Compiled RAG graph.
+        cache: Shared Redis cache.
 
     Returns:
         QueryResponse with answer, citations, metadata.
     """
+    start_time = time.time()
     request_id = getattr(request.state, "request_id", "unknown")
     session_id = body.session_id or str(uuid.uuid4())
 
@@ -198,6 +269,71 @@ async def query_endpoint(
         session_id=session_id,
         has_filter=body.metadata_filter is not None,
     )
+
+    # 1. Check Redis cache
+    cached_response = await cache.get(body.query, body.metadata_filter)
+    if cached_response is not None:
+        response.headers["X-Cache"] = "HIT"
+        session = session_store.get_or_create(session_id)
+        
+        # Keep raw citations as dicts for add_turn
+        raw_citations = cached_response.get("citations", [])
+        session.add_turn(
+            query=body.query,
+            answer=cached_response.get("answer", ""),
+            citations=raw_citations,
+            metadata_filter=body.metadata_filter,
+        )
+        
+        # Build CitationResponse objects for QueryResponse returning
+        citations = []
+        for c in raw_citations:
+            citations.append(
+                CitationResponse(
+                    chunk_id=c.get("chunk_id", ""),
+                    filing_reference=c.get("filing_reference", ""),
+                    section=c.get("section", ""),
+                    page=c.get("page"),
+                    relevance_score=c.get("relevance_score", 0.0),
+                )
+            )
+            
+        res = QueryResponse(
+            answer=cached_response.get("answer", ""),
+            citations=citations,
+            session_id=session_id,
+            confidence=cached_response.get("confidence", 0.0),
+            route=cached_response.get("route", "unknown"),
+            prompt_version=cached_response.get("prompt_version", "unknown"),
+            metadata=cached_response.get("metadata", {}),
+            cached=True,
+        )
+
+        elapsed_ms = int((time.time() - start_time) * 1000)
+        api_key = getattr(request.state, "api_key", None)
+        if not api_key:
+            auth_header = request.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                api_key = auth_header[7:]
+            else:
+                api_key = request.headers.get("X-API-Key", "anonymous")
+        background_tasks.add_task(
+            log_query,
+            api_key_hash=hash_api_key(api_key),
+            query_text=body.query,
+            ticker=body.metadata_filter.get("ticker") if body.metadata_filter else None,
+            filing_type=body.metadata_filter.get("filing_type") if body.metadata_filter else None,
+            fiscal_period=body.metadata_filter.get("fiscal_period") if body.metadata_filter else None,
+            confidence_score=res.confidence,
+            response_time_ms=elapsed_ms,
+            was_declined=res.route == "decline",
+            cache_hit=True,
+            chunk_count=len(res.citations),
+        )
+        return res
+
+    # Cache miss
+    response.headers["X-Cache"] = "MISS"
 
     session = session_store.get_or_create(session_id)
     resolved_query = session.resolve_references(body.query)
@@ -259,7 +395,7 @@ async def query_endpoint(
 
     prompt_versions = get_active_prompt_version()
 
-    return QueryResponse(
+    res = QueryResponse(
         answer=answer,
         citations=citation_responses,
         session_id=session_id,
@@ -275,7 +411,34 @@ async def query_endpoint(
             "trace_id": trace_summary.get("trace_id", ""),
             "total_latency_ms": trace_summary.get("total_latency_ms", 0),
         },
+        cached=False,
     )
+
+    await cache.set(body.query, body.metadata_filter, res.model_dump())
+
+    elapsed_ms = int((time.time() - start_time) * 1000)
+    api_key = getattr(request.state, "api_key", None)
+    if not api_key:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            api_key = auth_header[7:]
+        else:
+            api_key = request.headers.get("X-API-Key", "anonymous")
+    background_tasks.add_task(
+        log_query,
+        api_key_hash=hash_api_key(api_key),
+        query_text=body.query,
+        ticker=body.metadata_filter.get("ticker") if body.metadata_filter else None,
+        filing_type=body.metadata_filter.get("filing_type") if body.metadata_filter else None,
+        fiscal_period=body.metadata_filter.get("fiscal_period") if body.metadata_filter else None,
+        confidence_score=res.confidence,
+        response_time_ms=elapsed_ms,
+        was_declined=res.route == "decline",
+        cache_hit=False,
+        chunk_count=len(res.citations),
+    )
+
+    return res
 
 
 # --------------------------------------------------------------------------- #
@@ -588,3 +751,30 @@ async def get_metrics() -> dict:
         Dict with full metrics summary.
     """
     return metrics.get_summary()
+
+
+# --------------------------------------------------------------------------- #
+# GET /analytics/queries
+# --------------------------------------------------------------------------- #
+
+
+@router.get("/analytics/queries")
+async def get_analytics_endpoint(
+    ticker: str | None = None,
+    days: int = 7,
+) -> dict:
+    """Return aggregated query analytics for a given ticker or duration.
+
+    Args:
+        ticker: Optional company ticker to filter by.
+        days: Number of past days to aggregate over (default 7).
+
+    Returns:
+        Aggregated analytics summary.
+    """
+    from finrag.database.connection import AsyncSessionLocal
+    from finrag.database.repository import QueryLogRepository
+
+    async with AsyncSessionLocal() as session:
+        log_repo = QueryLogRepository()
+        return await log_repo.get_analytics(session=session, ticker=ticker, days=days)
