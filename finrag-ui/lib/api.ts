@@ -275,10 +275,12 @@ function handleNamedEvent(
       callbacks.onDecline(reason);
     }
 
+    const confidenceVal = typeof data.confidence === "number" ? data.confidence : (isValid ? 0.85 : 0.0);
+
     callbacks.onComplete({
       answer: getAnswer(),
       citations: accumulatedCitations,
-      confidence: isValid ? 0.85 : 0.0,
+      confidence: confidenceVal,
       declined,
       decline_reason: declined ? "See decline reason above." : null,
     });
@@ -307,6 +309,8 @@ function mapBackendCitation(raw: Record<string, unknown>): Citation | null {
   const ticker = refParts[0] || "N/A";
   const filingType = refParts[1] || "N/A";
 
+  const documentUrl = (raw.document_url as string) ?? null;
+
   if (!chunkId && !filingRef) return null;
 
   return {
@@ -315,6 +319,7 @@ function mapBackendCitation(raw: Record<string, unknown>): Citation | null {
     filing_type: filingType,
     section,
     page,
+    document_url: documentUrl,
     // Provide a useful fallback so the drawer always shows something meaningful
     text: text.trim() ||
       `This excerpt is from the ${section || "filing"} section of the ${filingRef} document. Open the original filing on SEC EDGAR to view the full text.`,

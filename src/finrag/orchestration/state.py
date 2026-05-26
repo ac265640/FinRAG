@@ -98,6 +98,7 @@ class GraphState(TypedDict, total=False):
     answer: str
     citations: list[dict]
     generation_model: str
+    confidence: float
 
     # --- Validation ---
     is_valid: bool

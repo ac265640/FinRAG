@@ -277,21 +277,13 @@ def generate(
         )
 
         # Convert Pydantic model to dict for graph state
-        citations = [
-            {
-                "chunk_id": c.chunk_id,
-                "filing_reference": c.filing_reference,
-                "section": c.section,
-                "text_excerpt": c.text_excerpt,
-                "relevance_score": c.relevance_score,
-            }
-            for c in cited_answer.citations
-        ]
+        citations = _build_citations_with_metadata(cited_answer.citations, chunks)
 
         result: dict = {
             "answer": cited_answer.answer_text,
             "citations": citations,
             "generation_model": rag_generator._model_name,
+            "confidence": cited_answer.confidence,
             "step_count": step_count + 1,
         }
 
@@ -364,6 +356,60 @@ def _generate_stub(query: str, chunks: list[dict], step_count: int) -> dict:
     }
 
 
+def _build_citations_with_metadata(cited_citations, chunks) -> list[dict]:
+    """Build citation dicts with extra metadata and resolved document_url."""
+    from pathlib import Path
+    import json
+    from finrag.config import get_settings
+    
+    citations = []
+    settings = get_settings()
+    
+    for c in cited_citations:
+        citation_dict = {
+            "chunk_id": c.chunk_id,
+            "filing_reference": c.filing_reference,
+            "section": c.section,
+            "text_excerpt": c.text_excerpt,
+            "relevance_score": c.relevance_score,
+            "document_url": None,
+            "ticker": "",
+            "filing_type": "",
+            "filing_date": "",
+        }
+        
+        # Find the original chunk to extract metadata (ticker, form_type, filing_date)
+        matching_chunk = next((ch for ch in chunks if ch.get("chunk_id") == c.chunk_id), None)
+        if matching_chunk and "metadata" in matching_chunk:
+            meta = matching_chunk["metadata"]
+            ticker = meta.get("ticker", "")
+            form_type = meta.get("form_type", "")
+            filing_date = meta.get("filing_date", "")
+            
+            citation_dict["ticker"] = ticker
+            citation_dict["filing_type"] = form_type
+            citation_dict["filing_date"] = filing_date
+            
+            # Lookup local metadata.json to get primary_document_url
+            if ticker and form_type and filing_date:
+                try:
+                    safe_date = filing_date.replace("-", "")
+                    meta_file = Path(settings.data_dir) / f"{ticker}_{form_type}_{safe_date}" / "metadata.json"
+                    if meta_file.exists():
+                        with open(meta_file, encoding="utf-8") as f:
+                            local_meta = json.load(f)
+                        citation_dict["document_url"] = local_meta.get("primary_document_url")
+                except Exception as e:
+                    logger.warning("failed_to_resolve_document_url", error=str(e))
+            
+            # Fallback to the SEC corporate filings search page if document_url couldn't be resolved
+            if not citation_dict.get("document_url") and ticker:
+                citation_dict["document_url"] = f"https://www.sec.gov/edgar/browse/?CIK={ticker.upper()}"
+                    
+        citations.append(citation_dict)
+    return citations
+
+
 # --------------------------------------------------------------------------- #
 # Node: Calculate (LLM with function calling)
 # --------------------------------------------------------------------------- #
@@ -420,21 +466,13 @@ def calculate(
             context_chunks=chunks,
         )
 
-        citations = [
-            {
-                "chunk_id": c.chunk_id,
-                "filing_reference": c.filing_reference,
-                "section": c.section,
-                "text_excerpt": c.text_excerpt,
-                "relevance_score": c.relevance_score,
-            }
-            for c in cited_answer.citations
-        ]
+        citations = _build_citations_with_metadata(cited_answer.citations, chunks)
 
         result: dict = {
             "answer": cited_answer.answer_text,
             "citations": citations,
             "generation_model": rag_generator._model_name,
+            "confidence": cited_answer.confidence,
             "step_count": step_count + 1,
         }
 

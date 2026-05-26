@@ -144,6 +144,10 @@ class CitationResponse(BaseModel):
     section: str = ""
     page: int | None = None
     relevance_score: float = 0.0
+    document_url: str | None = None
+    ticker: str = ""
+    filing_type: str = ""
+    filing_date: str = ""
 
 
 class QueryResponse(BaseModel):
@@ -390,6 +394,10 @@ async def query_endpoint(
                     section=c.get("section", ""),
                     page=c.get("page"),
                     relevance_score=c.get("relevance_score", 0.0),
+                    document_url=c.get("document_url"),
+                    ticker=c.get("ticker", ""),
+                    filing_type=c.get("filing_type", ""),
+                    filing_date=c.get("filing_date", ""),
                 )
             )
 
@@ -399,7 +407,7 @@ async def query_endpoint(
         answer=answer,
         citations=citation_responses,
         session_id=session_id,
-        confidence=result.get("route_confidence", 0.0),
+        confidence=result.get("confidence", result.get("route_confidence", 0.0)),
         route=result.get("route", "unknown"),
         prompt_version=prompt_versions.get("generation", "unknown"),
         metadata={
@@ -604,6 +612,7 @@ async def query_stream_endpoint(
                     "is_declined": route == "decline",
                     "total_citations": len(citations),
                     "request_id": request_id,
+                    "confidence": result.get("confidence", result.get("route_confidence", 0.0)),
                 }
             ),
         }

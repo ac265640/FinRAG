@@ -17,7 +17,7 @@ export default function CitationDrawer({ citation, isOpen, onClose }: CitationDr
   }, [onClose]);
 
   const edgarUrl = citation
-    ? `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${citation.ticker}&type=${citation.filing_type}&dateb=&owner=include&count=10`
+    ? (citation.document_url || `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${citation.ticker}&type=${citation.filing_type}&dateb=&owner=include&count=10`)
     : "#";
 
   return (

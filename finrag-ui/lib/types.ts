@@ -14,6 +14,7 @@ export interface Citation {
   section: string;
   page: number;
   text: string;
+  document_url?: string | null;
 }
 
 export interface QueryResponse {

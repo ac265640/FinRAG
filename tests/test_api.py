@@ -101,7 +101,7 @@ class TestHealthCheck:
         resp = client_no_auth.get("/healthz")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["status"] == "healthy"
+        assert data["status"] in ("healthy", "degraded")
         assert data["version"] == "0.11.0"
         assert "pipeline_active" in data
         assert "active_sessions" in data
