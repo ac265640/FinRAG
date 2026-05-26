@@ -1,3 +1,13 @@
+---
+title: FinRAG
+emoji: 📈
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # FinRAG
 
 > A production-grade, citation-enforced financial RAG system integrating state-of-the-art AI orchestration with robust enterprise software engineering.
