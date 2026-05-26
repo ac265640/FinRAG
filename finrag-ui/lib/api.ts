@@ -19,7 +19,7 @@ export async function checkHealth(): Promise<boolean> {
     });
     if (!res.ok) return false;
     const data = await res.json();
-    return data.status === "ok" || data.status === "healthy";
+    return data.status === "ok" || data.status === "healthy" || data.status === "degraded";
   } catch {
     return false;
   }
