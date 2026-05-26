@@ -437,12 +437,24 @@ class RAGGenerator:
                 json_text = data["candidates"][0]["content"]["parts"][0]["text"]
 
                 # The LLM might wrap the JSON in markdown formatting block
+                json_text = json_text.strip()
                 if json_text.startswith("```json"):
-                    json_text = json_text.replace("```json\n", "").replace("\n```", "")
+                    json_text = json_text[7:]
+                    if json_text.endswith("```"):
+                        json_text = json_text[:-3]
                 elif json_text.startswith("```"):
-                    json_text = json_text.replace("```\n", "").replace("\n```", "")
+                    json_text = json_text[3:]
+                    if json_text.endswith("```"):
+                        json_text = json_text[:-3]
+                json_text = json_text.strip()
 
-                answer_result = CitedAnswer.model_validate_json(json_text)
+                try:
+                    # Use standard json.loads with strict=False to allow raw control characters/newlines
+                    parsed_dict = json.loads(json_text, strict=False)
+                    answer_result = CitedAnswer.model_validate(parsed_dict)
+                except Exception as e:
+                    logger.warning("robust_json_parse_fallback", error=str(e))
+                    answer_result = CitedAnswer.model_validate_json(json_text)
 
                 logger.info(
                     "llm_call_complete",
