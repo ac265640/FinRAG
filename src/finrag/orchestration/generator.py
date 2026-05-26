@@ -42,17 +42,16 @@ logger = structlog.get_logger(__name__)
 # Constants
 # --------------------------------------------------------------------------- #
 
-# gemini-2.5-flash-lite: fast, separate quota pool from 2.0-flash.
-# Confirmed available on current API key.
-DEFAULT_MODEL = "gemini-2.5-flash-lite"
+# gemini-2.5-flash: highly capable and fast, has much higher free tier limits (1,500 requests/day).
+DEFAULT_MODEL = "gemini-2.5-flash"
 DEFAULT_TEMPERATURE = 0.1  # Low temp for factual extraction
 DEFAULT_MAX_RETRIES = 1  # One retry with stricter prompt
 
 # Fallback model order on RESOURCE_EXHAUSTED
 MODEL_FALLBACKS = [
-    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
+    "gemini-2.5-flash-lite",
 ]
 
 
@@ -461,7 +460,16 @@ class RAGGenerator:
                 is_quota = "quota" in err_str.lower() or "resource_exhausted" in err_str.lower()
 
                 logger.error("llm_call_failed", error=err_str)
-                # Give a user-friendly message for quota errors
+                
+                # If we hit a rate limit / quota error, retry with exponential backoff
+                if is_quota and quota_attempt < MAX_QUOTA_RETRIES:
+                    wait_time = (2 ** quota_attempt) * 4
+                    logger.warning("llm_quota_backoff", wait_seconds=wait_time, attempt=quota_attempt + 1)
+                    import time
+                    time.sleep(wait_time)
+                    continue
+
+                # Give a user-friendly message for quota errors if all retries are exhausted
                 if is_quota:
                     friendly = (
                         "The AI model is temporarily rate-limited (Gemini free tier: 20 req/min). "
