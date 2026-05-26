@@ -31,6 +31,7 @@ htmlcov/
 data/*
 !data/raw/
 !data/chroma/
+data/chroma/*.sqlite3
 
 
 # OS
