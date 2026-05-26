@@ -4,9 +4,10 @@ import structlog
 import time
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
-    """Middleware to inject an 8-character request ID into every request context for structured logging."""
+    """Middleware to inject a request ID into every request context for structured logging."""
     async def dispatch(self, request, call_next):
-        request_id = str(uuid.uuid4())[:8]  # short 8-char ID
+        # Use client-provided X-Request-ID or generate a new UUID4 (36-chars)
+        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
         
         # Bind request_id to structlog context
         request.state.request_id = request_id
@@ -31,3 +32,4 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         # Add request ID to response headers
         response.headers["X-Request-ID"] = request_id
         return response
+

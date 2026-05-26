@@ -72,6 +72,7 @@ CALCULATE_PATTERNS: list[re.Pattern] = [
     re.compile(r"\b(year.over.year|yoy|quarter.over.quarter|qoq)\b", re.IGNORECASE),
     re.compile(r"\b(growth\s+rate|cagr|margin\s+change)\b", re.IGNORECASE),
     re.compile(r"\b(how\s+much\s+did\s+.{0,30}\s+(change|grow|decline|increase|decrease))\b", re.IGNORECASE),
+    re.compile(r"\b(percent(age)?|proportion|fraction)\b", re.IGNORECASE),
 ]
 
 

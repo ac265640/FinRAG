@@ -267,7 +267,7 @@ class TestLoadActualConfigs:
             assert config.version == "v1"
             assert config.name == "citation_grounded_generation"
             assert "financial research assistant" in config.system_prompt.lower()
-            assert config.model.name == "gemini-2.0-flash"
+            assert config.model.name == "gemini-2.5-flash"
             assert config.enforcement.confidence_threshold == 0.3
 
     def test_load_real_retrieval_config(self):

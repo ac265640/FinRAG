@@ -122,11 +122,14 @@ class TestCitationSchema:
         assert c.relevance_score == 0.95
 
     def test_score_bounds(self) -> None:
-        """Relevance score must be 0-1."""
-        with pytest.raises(ValueError):
-            Citation(chunk_id="x", relevance_score=1.5)
-        with pytest.raises(ValueError):
-            Citation(chunk_id="x", relevance_score=-0.1)
+        """Relevance score is clamped to [0, 1] (not rejected)."""
+        # The schema clamps out-of-range scores rather than raising,
+        # so that LLM-generated values just outside [0,1] don't crash the pipeline.
+        c_high = Citation(chunk_id="x", relevance_score=1.5)
+        assert c_high.relevance_score == 1.0  # clamped to max
+
+        c_low = Citation(chunk_id="x", relevance_score=-0.1)
+        assert c_low.relevance_score == 0.0  # clamped to min
 
 
 class TestCitedAnswerSchema:
@@ -400,92 +403,78 @@ class TestRAGGenerator:
         assert passed is False
         assert answer.confidence == 0.0
 
-    @patch("finrag.orchestration.generator.ChatGoogleGenerativeAI")
-    def test_successful_generation(self, mock_llm_cls: MagicMock, valid_chunks: list[dict]) -> None:
-        """Mocked LLM returns valid CitedAnswer."""
+    def test_successful_generation(self, valid_chunks: list[dict]) -> None:
+        """Mocked _invoke_provider returns valid CitedAnswer JSON."""
+        import json
+
         from finrag.orchestration.generator import RAGGenerator
 
-        # Mock the structured output chain
-        mock_structured = MagicMock()
-        mock_structured.invoke.return_value = CitedAnswer(
-            answer_text="Apple reported $383.3B in revenue for FY2024.",
-            citations=[
-                Citation(
-                    chunk_id="aapl_rev_001",
-                    filing_reference="AAPL 10-K FY2024",
-                    section="Item 7",
-                    text_excerpt="$383.3 billion",
-                    relevance_score=0.95,
-                ),
-            ],
-            confidence=0.92,
-            reasoning="Direct extraction.",
-        )
-
-        mock_llm_instance = MagicMock()
-        mock_llm_instance.with_structured_output.return_value = mock_structured
-        mock_llm_cls.return_value = mock_llm_instance
+        good_json = json.dumps({
+            "answer_text": "Apple reported $383.3B in revenue for FY2024.",
+            "citations": [{
+                "chunk_id": "aapl_rev_001",
+                "filing_reference": "AAPL 10-K FY2024",
+                "section": "Item 7",
+                "text_excerpt": "$383.3 billion",
+                "relevance_score": 0.95,
+            }],
+            "confidence": 0.92,
+            "reasoning": "Direct extraction.",
+        })
 
         gen = RAGGenerator(api_key="fake-key")
-        answer, passed, errors = gen.generate("What was Apple revenue?", valid_chunks)
+        with patch.object(gen, "_invoke_provider", return_value=good_json):
+            answer, passed, errors = gen.generate("What was Apple revenue?", valid_chunks)
 
         assert passed is True
         assert answer.confidence == 0.92
         assert len(answer.citations) == 1
         assert answer.citations[0].chunk_id == "aapl_rev_001"
 
-    @patch("finrag.orchestration.generator.ChatGoogleGenerativeAI")
-    def test_hallucinated_citation_triggers_retry(self, mock_llm_cls: MagicMock, valid_chunks: list[dict]) -> None:
+    def test_hallucinated_citation_triggers_retry(self, valid_chunks: list[dict]) -> None:
         """Hallucinated citation triggers retry with stricter prompt."""
+        import json
+
         from finrag.orchestration.generator import RAGGenerator
 
-        # First call: hallucinated citation
-        bad_answer = CitedAnswer(
-            answer_text="Revenue was $383B.",
-            citations=[Citation(chunk_id="FAKE_HALLUCINATED")],
-            confidence=0.8,
-        )
-        # Second call (retry): valid citation
-        good_answer = CitedAnswer(
-            answer_text="Apple reported $383.3B revenue.",
-            citations=[Citation(chunk_id="aapl_rev_001")],
-            confidence=0.85,
-        )
-
-        mock_structured = MagicMock()
-        mock_structured.invoke.side_effect = [bad_answer, good_answer]
-
-        mock_llm_instance = MagicMock()
-        mock_llm_instance.with_structured_output.return_value = mock_structured
-        mock_llm_cls.return_value = mock_llm_instance
+        bad_json = json.dumps({
+            "answer_text": "Revenue was $383B.",
+            "citations": [{"chunk_id": "FAKE_HALLUCINATED", "relevance_score": 0.0}],
+            "confidence": 0.8,
+            "reasoning": "",
+        })
+        good_json = json.dumps({
+            "answer_text": "Apple reported $383.3B revenue.",
+            "citations": [{"chunk_id": "aapl_rev_001", "relevance_score": 0.0}],
+            "confidence": 0.85,
+            "reasoning": "",
+        })
 
         gen = RAGGenerator(api_key="fake-key")
-        answer, passed, errors = gen.generate("What was revenue?", valid_chunks)
+        invoke_mock = MagicMock(side_effect=[bad_json, good_json])
+        with patch.object(gen, "_invoke_provider", invoke_mock):
+            answer, passed, errors = gen.generate("What was revenue?", valid_chunks)
 
         assert passed is True
         assert answer.citations[0].chunk_id == "aapl_rev_001"
-        assert mock_structured.invoke.call_count == 2
+        assert invoke_mock.call_count == 2
 
-    @patch("finrag.orchestration.generator.ChatGoogleGenerativeAI")
-    def test_both_attempts_fail(self, mock_llm_cls: MagicMock, valid_chunks: list[dict]) -> None:
+    def test_both_attempts_fail(self, valid_chunks: list[dict]) -> None:
         """Both generation attempts failing returns errors."""
+        import json
+
         from finrag.orchestration.generator import RAGGenerator
 
-        bad_answer = CitedAnswer(
-            answer_text="Revenue was high.",
-            citations=[Citation(chunk_id="FAKE")],
-            confidence=0.1,
-        )
-
-        mock_structured = MagicMock()
-        mock_structured.invoke.return_value = bad_answer
-
-        mock_llm_instance = MagicMock()
-        mock_llm_instance.with_structured_output.return_value = mock_structured
-        mock_llm_cls.return_value = mock_llm_instance
+        bad_json = json.dumps({
+            "answer_text": "Revenue was high.",
+            "citations": [{"chunk_id": "FAKE", "relevance_score": 0.0}],
+            "confidence": 0.1,
+            "reasoning": "",
+        })
 
         gen = RAGGenerator(api_key="fake-key")
-        answer, passed, errors = gen.generate("What was revenue?", valid_chunks)
+        with patch.object(gen, "_invoke_provider", return_value=bad_json):
+            answer, passed, errors = gen.generate("What was revenue?", valid_chunks)
 
         assert passed is False
         assert len(errors) > 0
@@ -494,7 +483,10 @@ class TestRAGGenerator:
         """Missing API key raises ValueError on LLM call."""
         from finrag.orchestration.generator import RAGGenerator
 
-        gen = RAGGenerator(api_key="")
+        # Bypass env var lookup by directly clearing _api_key after init
+        gen = RAGGenerator(api_key="fake-key")
+        gen._api_key = ""  # Simulate environment with no key
+        gen._llm = None    # Force lazy re-init
         with pytest.raises(ValueError, match="No Google API key"):
             gen._get_llm()
 
@@ -559,21 +551,19 @@ class TestUpdatedGenerateNode:
         assert result["answer"] == ""
         assert "No context" in result["error"]
 
-    @patch("finrag.orchestration.generator.ChatGoogleGenerativeAI")
-    def test_with_generator(self, mock_llm_cls: MagicMock) -> None:
-        """Generate with real RAGGenerator (mocked LLM)."""
+    def test_with_generator(self) -> None:
+        """Generate with real RAGGenerator (mocked _invoke_provider)."""
+        import json
+
         from finrag.orchestration.generator import RAGGenerator
         from finrag.orchestration.nodes import generate
 
-        mock_structured = MagicMock()
-        mock_structured.invoke.return_value = CitedAnswer(
-            answer_text="Apple revenue was $383B.",
-            citations=[Citation(chunk_id="c1", relevance_score=0.9)],
-            confidence=0.9,
-        )
-        mock_llm = MagicMock()
-        mock_llm.with_structured_output.return_value = mock_structured
-        mock_llm_cls.return_value = mock_llm
+        good_json = json.dumps({
+            "answer_text": "Apple revenue was $383B.",
+            "citations": [{"chunk_id": "c1", "relevance_score": 0.9}],
+            "confidence": 0.9,
+            "reasoning": "",
+        })
 
         gen = RAGGenerator(api_key="fake")
         state = {
@@ -583,7 +573,8 @@ class TestUpdatedGenerateNode:
             ],
             "step_count": 2,
         }
-        result = generate(state, rag_generator=gen)
+        with patch.object(gen, "_invoke_provider", return_value=good_json):
+            result = generate(state, rag_generator=gen)
 
         assert result["answer"] == "Apple revenue was $383B."
         assert len(result["citations"]) == 1

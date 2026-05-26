@@ -198,6 +198,14 @@ class RAGGenerator:
         # Resolve API key
         resolved_key = api_key or os.environ.get("GOOGLE_API_KEY", "")
 
+        # Resolve all available keys for fallback rotation
+        self._keys = {
+            "gemini_primary": resolved_key,
+            "gemini_secondary": os.environ.get("GOOGLE_API_KEY_SECONDARY", "").strip(),
+            "cohere": os.environ.get("COHERE_API_KEY", "").strip(),
+            "openai": os.environ.get("OPENAI_API_KEY", "").strip(),
+        }
+
         # Lazy-init the LLM (defer to first call to allow testing without key)
         self._api_key = resolved_key
         self._llm: ChatGoogleGenerativeAI | None = None
@@ -207,8 +215,12 @@ class RAGGenerator:
             model=model_name,
             temperature=temperature,
             max_retries=max_retries,
-            has_api_key=bool(resolved_key),
+            has_gemini_primary=bool(self._keys["gemini_primary"]),
+            has_gemini_secondary=bool(self._keys["gemini_secondary"]),
+            has_cohere=bool(self._keys["cohere"]),
+            has_openai=bool(self._keys["openai"]),
         )
+
 
     def _get_llm(self) -> ChatGoogleGenerativeAI:
         """Lazy-load the LLM client.
@@ -350,11 +362,15 @@ class RAGGenerator:
         retry_errors: str | None = None,
         query_intent: str = "factual_extraction",
     ) -> CitedAnswer:
-        """Call the LLM and parse the response into CitedAnswer.
+        """Call the LLM with automatic multi-provider fallback.
 
-        Bypasses LangChain to call the Gemini REST API directly to avoid
-        a known issue where with_structured_output hangs indefinitely.
-        Uses curl via subprocess to bypass Python urllib3 TLS/IPv6 deadlocks.
+        Tries each available provider in priority order:
+          1. Gemini primary key
+          2. Gemini secondary key
+          3. Cohere (command-r-plus)
+          4. OpenAI (gpt-4o-mini)
+
+        Uses direct curl calls — no extra SDK dependencies required.
 
         Args:
             query: User's question.
@@ -363,144 +379,179 @@ class RAGGenerator:
             query_intent: Router intent tag. "summarize" uses a different system prompt.
 
         Returns:
-            Parsed CitedAnswer from LLM response.
+            Parsed CitedAnswer from the first successful provider.
         """
         import json
         import subprocess
 
-        if not self._api_key:
-            return CitedAnswer(
-                answer_text="Generation failed: Missing API Key",
-                citations=[],
-                confidence=0.0,
-                reasoning="No API key provided.",
-            )
+        # Priority-ordered list of (name, api_key, model_id)
+        providers = [
+            ("gemini_primary", self._keys["gemini_primary"], self._model_name),
+            ("gemini_secondary", self._keys["gemini_secondary"], self._model_name),
+            ("cohere", self._keys["cohere"], "command-a-03-2025"),
+            ("openai", self._keys["openai"], "gpt-4o-mini"),
+        ]
 
-        # Build prompt — use summary-specific system prompt for summarize intent
+        # Build prompt
         system = SUMMARY_SYSTEM_PROMPT if query_intent == "summarize" else SYSTEM_PROMPT
         if retry_errors:
             system += RETRY_PROMPT_SUFFIX.format(errors=retry_errors)
 
         user_message = (
             f"QUESTION: {query}\n\nCONTEXT:\n{context}\n\n"
-            f"Generate a cited answer using ONLY the context above. "
-            f"RETURN ONLY VALID JSON MATCHING THE SCHEMA."
+            "Generate a cited answer using ONLY the context above. "
+            "RETURN ONLY VALID JSON MATCHING THE SCHEMA."
         )
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self._model_name}:generateContent?key={self._api_key}"
+        last_error = "No providers configured."
 
-        payload = {
-            "system_instruction": {"parts": [{"text": system}]},
-            "contents": [{"role": "user", "parts": [{"text": user_message}]}],
-            "generationConfig": {"temperature": self._temperature, "response_mime_type": "application/json"},
-        }
+        for name, key, model in providers:
+            if not key:
+                logger.debug("provider_skipped_no_key", provider=name)
+                continue
 
-        # Max automatic retries on quota/rate-limit errors
-        MAX_QUOTA_RETRIES = 2
-
-        for quota_attempt in range(MAX_QUOTA_RETRIES + 1):
+            logger.info("llm_provider_attempt", provider=name, model=model)
             try:
-                # Use curl to avoid Python networking hangs in this specific environment
-                result = subprocess.run(
-                    ["curl", "-s", "-X", "POST", url, "-H", "Content-Type: application/json", "-d", json.dumps(payload)],
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
+                json_text = self._invoke_provider(
+                    name=name,
+                    key=key,
+                    model=model,
+                    system=system,
+                    user_message=user_message,
+                    subprocess_module=subprocess,
+                    json_module=json,
                 )
-
-                if result.returncode != 0:
-                    raise RuntimeError(f"curl failed: {result.stderr}")
-
-                data = json.loads(result.stdout)
-
-                if "error" in data:
-                    err = data["error"]
-                    err_msg = err.get("message", "Unknown error")
-                    err_status = err.get("status", "")
-
-                    # Detect quota/rate-limit errors and retry with backoff
-                    is_quota_err = (
-                        err_status == "RESOURCE_EXHAUSTED"
-                        or "quota" in err_msg.lower()
-                        or "rate" in err_msg.lower()
-                        or err.get("code") == 429
-                    )
-
-                    if is_quota_err:
-                        raise ValueError(f"Quota Exceeded: {err_msg}")
-
-                    raise ValueError(f"API Error: {err_msg}")
-
-                if "candidates" not in data or not data["candidates"]:
-                    raise ValueError(f"No candidates returned from API. Response: {data}")
-
-                json_text = data["candidates"][0]["content"]["parts"][0]["text"]
-
-                # The LLM might wrap the JSON in markdown formatting block
-                json_text = json_text.strip()
-                if json_text.startswith("```json"):
-                    json_text = json_text[7:]
-                    if json_text.endswith("```"):
-                        json_text = json_text[:-3]
-                elif json_text.startswith("```"):
-                    json_text = json_text[3:]
-                    if json_text.endswith("```"):
-                        json_text = json_text[:-3]
-                json_text = json_text.strip()
-
-                try:
-                    # Use standard json.loads with strict=False to allow raw control characters/newlines
-                    parsed_dict = json.loads(json_text, strict=False)
-                    answer_result = CitedAnswer.model_validate(parsed_dict)
-                except Exception as e:
-                    logger.warning("robust_json_parse_fallback", error=str(e))
-                    answer_result = CitedAnswer.model_validate_json(json_text)
-
-                logger.info(
-                    "llm_call_complete",
-                    model=self._model_name,
-                    confidence=answer_result.confidence,
-                    citations=len(answer_result.citations),
-                    is_retry=retry_errors is not None,
-                    quota_retries=quota_attempt,
-                )
-
-                return answer_result
+                json_text = json_text.strip().replace("```json", "").replace("```", "").strip()
+                answer = CitedAnswer.model_validate(json.loads(json_text, strict=False))
+                logger.info("llm_provider_success", provider=name, confidence=answer.confidence)
+                return answer
 
             except Exception as e:
-                err_str = str(e)
-                is_quota = "quota" in err_str.lower() or "resource_exhausted" in err_str.lower()
+                last_error = str(e)
+                is_quota = "quota" in last_error.lower() or "resource_exhausted" in last_error.lower() or "429" in last_error
+                logger.warning("llm_provider_failed", provider=name, error=last_error, is_quota=is_quota)
+                # Always fall through to the next provider on any failure
 
-                logger.error("llm_call_failed", error=err_str)
-                
-                # If we hit a rate limit / quota error, retry with exponential backoff
-                if is_quota and quota_attempt < MAX_QUOTA_RETRIES:
-                    wait_time = (2 ** quota_attempt) * 4
-                    logger.warning("llm_quota_backoff", wait_seconds=wait_time, attempt=quota_attempt + 1)
-                    import time
-                    time.sleep(wait_time)
-                    continue
-
-                # Give a user-friendly message for quota errors if all retries are exhausted
-                if is_quota:
-                    friendly = (
-                        "The AI model is temporarily rate-limited (Gemini free tier: 20 req/min). "
-                        "Please wait ~60 seconds and try again."
-                    )
-                else:
-                    friendly = f"Generation failed: {e}"
-
-                return CitedAnswer(
-                    answer_text=friendly,
-                    citations=[],
-                    confidence=0.0,
-                    reasoning=f"LLM call error: {e}",
-                )
-
-        # Should not reach here
+        # All providers exhausted
+        logger.error("all_providers_exhausted", last_error=last_error)
         return CitedAnswer(
-            answer_text="Generation failed after retries.",
+            answer_text=(
+                "The AI model is temporarily unavailable across all configured providers. "
+                "Please wait a few minutes and try again."
+            ),
             citations=[],
             confidence=0.0,
-            reasoning="Max quota retries exceeded.",
+            reasoning=f"All providers failed. Last error: {last_error}",
         )
+
+    def _invoke_provider(
+        self,
+        name: str,
+        key: str,
+        model: str,
+        system: str,
+        user_message: str,
+        subprocess_module,
+        json_module,
+    ) -> str:
+        """Invoke a single LLM provider and return the raw JSON text response.
+
+        Args:
+            name: Provider identifier ('gemini_primary', 'gemini_secondary', 'cohere', 'openai').
+            key: API key for this provider.
+            model: Model identifier string.
+            system: System prompt text.
+            user_message: User message text.
+            subprocess_module: Injected subprocess module.
+            json_module: Injected json module.
+
+        Returns:
+            Raw JSON string from the model's response.
+
+        Raises:
+            ValueError: If the provider returns an error or unexpected structure.
+            RuntimeError: If the curl subprocess fails.
+        """
+        if name.startswith("gemini"):
+            url = (
+                f"https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{model}:generateContent?key={key}"
+            )
+            payload = {
+                "system_instruction": {"parts": [{"text": system}]},
+                "contents": [{"role": "user", "parts": [{"text": user_message}]}],
+                "generationConfig": {
+                    "temperature": self._temperature,
+                    "response_mime_type": "application/json",
+                },
+            }
+            result = subprocess_module.run(
+                ["curl", "-s", "-X", "POST", url,
+                 "-H", "Content-Type: application/json",
+                 "-d", json_module.dumps(payload)],
+                capture_output=True, text=True, timeout=60,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"curl failed: {result.stderr}")
+            data = json_module.loads(result.stdout)
+            if "error" in data:
+                err = data["error"]
+                raise ValueError(f"{err.get('status', 'API_ERROR')}: {err.get('message', 'Unknown error')}")
+            if not data.get("candidates"):
+                raise ValueError(f"No candidates in response: {result.stdout[:200]}")
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+
+        elif name == "cohere":
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user_message},
+                ],
+                "response_format": {"type": "json_object"},
+                "temperature": self._temperature,
+            }
+            result = subprocess_module.run(
+                ["curl", "-s", "-X", "POST", "https://api.cohere.com/v2/chat",
+                 "-H", f"Authorization: Bearer {key}",
+                 "-H", "Content-Type: application/json",
+                 "-d", json_module.dumps(payload)],
+                capture_output=True, text=True, timeout=60,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"curl failed: {result.stderr}")
+            data = json_module.loads(result.stdout)
+            if "message" not in data:
+                raise ValueError(f"Cohere unexpected response: {result.stdout[:200]}")
+            # data["message"] is a string when the API returns an error
+            if isinstance(data["message"], str):
+                raise ValueError(f"Cohere API error: {data['message']}")
+            return data["message"]["content"][0]["text"]
+
+        elif name == "openai":
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user_message},
+                ],
+                "response_format": {"type": "json_object"},
+                "temperature": self._temperature,
+            }
+            result = subprocess_module.run(
+                ["curl", "-s", "-X", "POST", "https://api.openai.com/v1/chat/completions",
+                 "-H", f"Authorization: Bearer {key}",
+                 "-H", "Content-Type: application/json",
+                 "-d", json_module.dumps(payload)],
+                capture_output=True, text=True, timeout=60,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"curl failed: {result.stderr}")
+            data = json_module.loads(result.stdout)
+            if "error" in data:
+                raise ValueError(f"OpenAI error: {data['error'].get('message', 'Unknown')}")
+            if not data.get("choices"):
+                raise ValueError(f"OpenAI no choices: {result.stdout[:200]}")
+            return data["choices"][0]["message"]["content"]
+
+        raise ValueError(f"Unknown provider: {name}")
