@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest) {
   try {
     const backendRes = await fetch(`${BACKEND_URL}/healthz`, {
       method: "GET",
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!backendRes.ok) {

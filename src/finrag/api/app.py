@@ -1033,15 +1033,22 @@ def create_app(
 
         redis_status = "error"
         if hasattr(app.state, "redis_cache") and app.state.redis_cache is not None:
-            if await app.state.redis_cache.health_check():
-                redis_status = "ok"
+            try:
+                import asyncio
+                ok = await asyncio.wait_for(app.state.redis_cache.health_check(), timeout=1.5)
+                redis_status = "ok" if ok else "error"
+            except Exception:
+                redis_status = "error"
 
         postgres_status = "error"
         try:
+            import asyncio
             from finrag.database.connection import engine
             from sqlalchemy import text
-            async with engine.connect() as conn:
-                await conn.execute(text("SELECT 1"))
+            async def _pg_check():
+                async with engine.connect() as conn:
+                    await conn.execute(text("SELECT 1"))
+            await asyncio.wait_for(_pg_check(), timeout=1.5)
             postgres_status = "ok"
         except Exception:
             postgres_status = "error"
