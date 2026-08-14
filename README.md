@@ -34,7 +34,7 @@ FinRAG is an enterprise-grade financial research engine designed to query SEC fi
 
 ---
 
-##   Architecture
+##   Architecture 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
