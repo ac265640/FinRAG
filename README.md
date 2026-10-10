@@ -11,6 +11,25 @@
 
 ---
 
+## 🎬 Demo Video
+
+[![FinRAG demo video: click to watch](https://ac265640.github.io/FinRAG/demo/poster.jpg)](https://ac265640.github.io/FinRAG/)
+
+▶️ **[Watch the 37-second demo](https://ac265640.github.io/FinRAG/)** (plays in your browser, 1080p with sound). Every scene is recorded from the live platform:
+
+| Time | Scene |
+|---|---|
+| 0:07 | Landing page → **Start Chatting** |
+| 0:10 | Ask *"What was total revenue and net income?"* on Apple's FY2025 10-K and watch the pipeline run: encode → retrieve → rerank → ground → generate |
+| 0:16 | The answer: $416,161M net sales and $112,010M net income at **100% confidence**, with four cited sources |
+| 0:19 | Click a citation and the drawer shows the exact 10-K excerpt (*Net income $112,010*), with a link to SEC EDGAR |
+| 0:23 | Ask *"Should I buy Apple stock right now?"* and FinRAG **declines**: out of scope, insufficient evidence |
+| 0:27 | Switch to Microsoft and **Summarize Report**: a full 10-K summary backed by 10 sources |
+
+*Long waits are sped up and labelled on screen. The first query on the free-tier backend can take 15–20 s while the models warm up.*
+
+---
+
 ## What This Does
 
 FinRAG is an enterprise-grade financial research engine designed to query SEC filings (10-K, 10-Q, 8-K) and earnings call transcripts. It leverages advanced LLM reasoning to generate answers that are 100% grounded in source text, enforcing exact citations (company, filing period, section, and page). To eliminate hallucination, the system executes an automated refusal protocol if the evidence is insufficient.
